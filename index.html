@@ -1,0 +1,2543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevProd AI — Developer Productivity Hub</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232636;
+    --border: #2e3148;
+    --accent: #2563eb;
+    --accent2: #00d4aa;
+    --accent3: #ff6b6b;
+    --accent4: #ffd166;
+    --text: #e8e9f0;
+    --text2: #9a9db8;
+    --text3: #6b6e8a;
+    --green: #00d4aa;
+    --red: #ff6b6b;
+    --yellow: #ffd166;
+    --blue: #6c8fff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  .logo {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo h1 { font-size: 16px; font-weight: 700; color: var(--accent); letter-spacing: -0.3px; }
+  .logo p { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  .nav { padding: 12px 0; flex: 1; overflow-y: auto; }
+  .nav-section { padding: 8px 20px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 20px;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 13px;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(108,99,255,0.12); color: var(--accent); border-left-color: var(--accent); }
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  /* ── Main ── */
+  .main { flex: 1; overflow-y: auto; }
+
+  .page { display: none; padding: 32px 40px; }
+  .page.active { display: block; }
+
+  .page-header { margin-bottom: 28px; }
+  .page-header h2 { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .page-header p { color: var(--text2); font-size: 13px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-subtitle { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  /* ── Grid ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  /* ── Stat cards ── */
+  .stat { text-align: center; padding: 20px 16px; }
+  .stat-value { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 3px 9px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+  }
+  .badge-purple { background: rgba(108,99,255,0.18); color: #a89fff; }
+  .badge-green  { background: rgba(0,212,170,0.15);  color: #00d4aa; }
+  .badge-red    { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+  .badge-yellow { background: rgba(255,209,102,0.15); color: #ffd166; }
+  .badge-blue   { background: rgba(108,143,255,0.15); color: #6c8fff; }
+  .badge-gray   { background: rgba(155,158,184,0.15); color: #9a9db8; }
+
+  /* ── Tool table ── */
+  .tool-table { width: 100%; border-collapse: collapse; }
+  .tool-table th {
+    text-align: left; padding: 10px 14px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--text3); border-bottom: 1px solid var(--border);
+  }
+  .tool-table td { padding: 12px 14px; border-bottom: 1px solid rgba(46,49,72,0.5); vertical-align: middle; }
+  .tool-table tr:last-child td { border-bottom: none; }
+  .tool-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .tool-name { font-weight: 600; font-size: 13px; }
+  .tool-company { font-size: 11px; color: var(--text3); }
+
+  .rating-bar { display: flex; gap: 3px; }
+  .rating-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-filled { background: var(--accent); }
+  .dot-empty  { background: var(--border); }
+
+  /* ── Role pills ── */
+  .role-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .role-tab {
+    padding: 6px 16px; border-radius: 20px; cursor: pointer;
+    font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text2);
+    transition: all 0.15s;
+  }
+  .role-tab:hover { border-color: var(--accent); color: var(--accent); }
+  .role-tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  .role-content { display: none; }
+  .role-content.active { display: block; }
+
+  /* ── Use case list ── */
+  .use-case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .use-case-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--surface2); border-radius: 8px;
+    padding: 12px 14px; border: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .use-case-item:hover { border-color: var(--border); }
+  .use-case-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(108,99,255,0.2); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .use-case-text { font-size: 12px; color: var(--text2); line-height: 1.4; }
+  .use-case-title { font-weight: 600; color: var(--text); margin-bottom: 2px; }
+
+  /* ── Agent cards ── */
+  .agent-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .agent-card {
+    background: var(--surface2); border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 16px 18px;
+    transition: all 0.15s; cursor: default;
+  }
+  .agent-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .agent-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+  .agent-num { font-size: 11px; font-weight: 700; color: var(--text3); }
+  .agent-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .agent-desc { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 10px; }
+  .agent-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .agent-roi { font-size: 11px; color: var(--green); font-weight: 600; }
+
+  /* ── Metrics ── */
+  .metric-framework { margin-bottom: 24px; }
+  .metric-table { width: 100%; border-collapse: collapse; }
+  .metric-table th {
+    text-align: left; padding: 8px 14px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--text3); border-bottom: 1px solid var(--border); background: var(--surface2);
+  }
+  .metric-table td { padding: 11px 14px; border-bottom: 1px solid rgba(46,49,72,0.4); font-size: 12px; }
+  .metric-table tr:last-child td { border-bottom: none; }
+  .metric-name { font-weight: 600; color: var(--text); }
+
+  /* ── Insight box ── */
+  .insight {
+    border-radius: 8px; padding: 14px 18px;
+    font-size: 12.5px; line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .insight-warning { background: rgba(255,209,102,0.08); border: 1px solid rgba(255,209,102,0.25); color: var(--yellow); }
+  .insight-info    { background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.2); color: #a89fff; }
+  .insight-success { background: rgba(0,212,170,0.07); border: 1px solid rgba(0,212,170,0.2); color: var(--green); }
+  .insight-title   { font-weight: 700; margin-bottom: 4px; }
+
+  /* ── Progress bar ── */
+  .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .progress-label { width: 140px; font-size: 12px; color: var(--text2); flex-shrink: 0; }
+  .progress-track { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+  .progress-val { width: 36px; text-align: right; font-size: 12px; font-weight: 600; color: var(--text); }
+
+  /* ── Timeline ── */
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before { content: ''; position: absolute; left: 7px; top: 4px; bottom: 0; width: 2px; background: var(--border); }
+  .timeline-item { position: relative; margin-bottom: 20px; }
+  .timeline-dot {
+    position: absolute; left: -20px; top: 4px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--bg);
+  }
+  .timeline-phase { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .timeline-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .timeline-items { display: flex; flex-direction: column; gap: 4px; }
+  .timeline-items li { font-size: 12px; color: var(--text2); list-style: none; padding-left: 14px; position: relative; }
+  .timeline-items li::before { content: '•'; position: absolute; left: 0; color: var(--text3); }
+
+  /* ── Overview page ── */
+  .hero {
+    background: linear-gradient(135deg, rgba(108,99,255,0.12) 0%, rgba(0,212,170,0.06) 100%);
+    border: 1px solid rgba(108,99,255,0.2);
+    border-radius: 14px; padding: 28px 32px; margin-bottom: 24px;
+  }
+  .hero h3 { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+  .hero p { font-size: 13px; color: var(--text2); max-width: 600px; }
+  .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; }
+  .hero-stat { text-align: center; }
+  .hero-stat-val { font-size: 26px; font-weight: 800; }
+  .hero-stat-lbl { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+  .quick-wins { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .quick-win {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 18px;
+  }
+  .qw-icon { font-size: 22px; flex-shrink: 0; }
+  .qw-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .qw-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .qw-roi { font-size: 11px; color: var(--green); font-weight: 600; margin-top: 6px; }
+
+  /* ── Citation cards ── */
+  .citation-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .citation-card:hover { border-color: rgba(108,99,255,0.4); transform: translateY(-1px); }
+  .citation-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .citation-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .citation-meta  { font-size: 11px; color: var(--text3); }
+  .citation-finding { font-size: 12px; color: var(--text2); line-height: 1.65; margin-bottom: 12px; }
+  .citation-footer { display: flex; align-items: center; justify-content: flex-end; }
+  .citation-link {
+    font-size: 11px; color: var(--accent); text-decoration: none;
+    padding: 4px 10px; border-radius: 4px;
+    border: 1px solid rgba(108,99,255,0.25);
+    transition: background 0.15s;
+  }
+  .citation-link:hover { background: rgba(108,99,255,0.1); }
+
+  /* ── Sources footer ── */
+  .sources-footer {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .sources-footer-title {
+    font-size: 11px; font-weight: 700; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px;
+  }
+  .sources-list {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .source-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    font-size: 11px; color: var(--text2); text-decoration: none;
+    transition: all 0.15s; cursor: pointer;
+  }
+  .source-chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,0.08); }
+  .source-chip-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+
+  /* ── Inline links ── */
+  a.il { color: var(--accent); text-decoration: none; border-bottom: 1px dotted rgba(108,99,255,0.4); }
+  a.il:hover { border-bottom-color: var(--accent); }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .agent-grid, .use-case-grid, .quick-wins { grid-template-columns: 1fr; }
+    .hero-stats { grid-template-columns: 1fr 1fr; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="logo">
+      <h1>DevProd AI</h1>
+      <p>Developer Productivity Hub</p>
+    </div>
+    <div class="nav">
+      <div class="nav-section">Navigate</div>
+      <div class="nav-item active" onclick="showPage('overview', this)">
+        <span class="nav-icon">⚡</span> Overview
+      </div>
+      <div class="nav-item" onclick="showPage('tools', this)">
+        <span class="nav-icon">🛠</span> AI Tools
+      </div>
+      <div class="nav-item" onclick="showPage('roles', this)">
+        <span class="nav-icon">👤</span> By Role
+      </div>
+      <div class="nav-item" onclick="showPage('agents', this)">
+        <span class="nav-icon">🤖</span> Agent Catalog
+      </div>
+      <div class="nav-item" onclick="showPage('metrics', this)">
+        <span class="nav-icon">📊</span> Metrics
+      </div>
+      <div class="nav-item" onclick="showPage('research', this)">
+        <span class="nav-icon">🔬</span> Research
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      Last updated: April 28, 2026
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- ── OVERVIEW ── -->
+    <div class="page active" id="page-overview">
+      <div class="hero">
+        <h3>AI-Driven Developer Productivity — March 2026 State</h3>
+        <p>51% of all production code is now AI-written. SpaceX has an option to acquire Cursor for $60B. Uber burned its entire 2026 AI budget by April. The individual velocity gains are real — but review bottlenecks, bug rates, and budget models are all breaking under agentic workloads.</p>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-val" style="color:#6c63ff">51%</div>
+            <div class="hero-stat-lbl">All code now AI-written</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-val" style="color:#00d4aa">73%</div>
+            <div class="hero-stat-lbl">Teams using AI coding daily</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-val" style="color:#ffd166">3.6h</div>
+            <div class="hero-stat-lbl">Avg hours saved per dev/week</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-val" style="color:#ff6b6b">10%</div>
+            <div class="hero-stat-lbl">Org-level productivity plateau</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-header">
+        <h2>Quick Wins to Implement Now</h2>
+        <p>High-ROI, low-risk improvements you can start this week</p>
+      </div>
+
+      <div class="quick-wins">
+        <div class="quick-win">
+          <div class="qw-icon">📝</div>
+          <div>
+            <div class="qw-title">PR Automation Agent</div>
+            <div class="qw-desc">Auto-generate PR descriptions, risk assessments, and reviewer suggestions on every git push. Lowest effort, immediate time savings.</div>
+            <div class="qw-roi">Saves 15–30 min per PR</div>
+          </div>
+        </div>
+        <div class="quick-win">
+          <div class="qw-icon">🧪</div>
+          <div>
+            <div class="qw-title">Test Generation Agent</div>
+            <div class="qw-desc">Automatically generate unit tests, edge cases, and mocks for new or modified code. Claude Code produces the highest-quality tests.</div>
+            <div class="qw-roi">Coverage: 60% → 85%+</div>
+          </div>
+        </div>
+        <div class="quick-win">
+          <div class="qw-icon">🔍</div>
+          <div>
+            <div class="qw-title">Code Review Agent</div>
+            <div class="qw-desc">First-pass security, performance, and test coverage review before human reviewers — catches common issues automatically.</div>
+            <div class="qw-roi">Catches 60–70% of common issues</div>
+          </div>
+        </div>
+        <div class="quick-win">
+          <div class="qw-icon">📚</div>
+          <div>
+            <div class="qw-title">Context Steering Files</div>
+            <div class="qw-desc">Create CLAUDE.md or .cursorrules to encode your team's standards. AI follows them consistently — zero recurring correction overhead.</div>
+            <div class="qw-roi">One-time setup, permanent ROI</div>
+          </div>
+        </div>
+        <div class="quick-win">
+          <div class="qw-icon">🚀</div>
+          <div>
+            <div class="qw-title">Claude Code + Cursor Pairing</div>
+            <div class="qw-desc">Use Claude Code for complex architecture and multi-file work; Cursor for fast daily iteration. Combined cost ~$40/month.</div>
+            <div class="qw-roi">~$40/mo, highest output per dollar</div>
+          </div>
+        </div>
+        <div class="quick-win">
+          <div class="qw-icon">📐</div>
+          <div>
+            <div class="qw-title">Baseline Your Metrics Now</div>
+            <div class="qw-desc">Instrument DORA metrics BEFORE any AI adoption. Without a baseline, you cannot prove ROI or detect quality degradation.</div>
+            <div class="qw-roi">Critical for measuring AI impact</div>
+          </div>
+        </div>
+      </div>
+
+      <br>
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-header">
+          <div>
+            <div class="card-title">What's New — April 28, 2026</div>
+            <div class="card-subtitle">Significant findings from today's research run</div>
+          </div>
+          <span class="badge badge-green">Updated Today</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+            <div style="font-size:18px;flex-shrink:0">🚀</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">SpaceX Acquires Option to Buy Cursor for $60 Billion (April 21, 2026)</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.5">SpaceX struck a deal with Cursor maker Anysphere giving SpaceX the option to purchase Cursor in 2026 for $60B — or pay $10B for the collaboration if the acquisition does not close. Cursor was hours from closing a $2B round at $50B when SpaceX preempted it. The combination is built around Colossus (SpaceX's million-H100-equivalent cluster) and Cursor's 60%+ Fortune 500 distribution. Valuation trajectory in 16 months: $2.5B → $9B → $29.3B → $50B → $60B option. <a href="https://techcrunch.com/2026/04/21/spacex-is-working-with-cursor-and-has-an-option-to-buy-the-startup-for-60-billion/" target="_blank" class="il">TechCrunch</a> · <a href="https://www.bloomberg.com/news/articles/2026-04-21/spacex-says-has-agreement-to-acquire-cursor-for-60-billion" target="_blank" class="il">Bloomberg</a></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+            <div style="font-size:18px;flex-shrink:0">💸</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">Uber Burned Its Entire 2026 AI Budget by April — $500–$2,000/Engineer/Month</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.5">Uber exhausted its full-year AI tooling budget in four months, primarily from Claude Code API costs. 95% of Uber's engineers actively use AI tools; 11% of live backend updates and up to 70% of committed code originated from AI. CTO Praveen Neppalli Naga: "I'm back to the drawing board, because the budget I thought I would need is blown away." Lesson: per-seat license pricing models are fundamentally broken for token-based agentic workloads. <a href="https://awesomeagents.ai/news/uber-burned-2026-ai-budget-april/" target="_blank" class="il">Awesome Agents</a></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+            <div style="font-size:18px;flex-shrink:0">📊</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">Faros AI Paradox: 98% More PRs, 91% Longer Review Times, 9% More Bugs (April 2026)</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.5">Based on 22,000 developers across 2 years of telemetry: teams with high AI adoption complete 21% more tasks and merge 98% more PRs. But PR review time increases 91% — the human approval bottleneck consumes most of the velocity gain. 9% increase in bugs shipped to production. Core thesis: AI-driven coding gains evaporate when review, testing, and release pipelines can't match the new velocity (Amdahl's Law applied to software delivery). <a href="https://www.faros.ai/blog/ai-software-engineering" target="_blank" class="il">Faros AI</a></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+            <div style="font-size:18px;flex-shrink:0">🔬</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">JetBrains ICSE 2026: AI Redistributes Work Developers Don't Perceive</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.5">Mixed-methods study of 800 developers (2 years of telemetry + 62 surveys) presented at ICSE 2026. AI users: 100 more deletions/month vs. 7 for non-users — far more curation than expected, yet 50% perceived no change. Debugging sessions unchanged despite 50% perceiving quality improvements. Context switching slightly worse (6 more IDE activations/month). The headline: what developers think AI does and what telemetry shows are consistently misaligned. <a href="https://blog.jetbrains.com/research/2026/04/ai-impact-developer-workflows/" target="_blank" class="il">JetBrains Research</a></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+            <div style="font-size:18px;flex-shrink:0">🤖</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">Microsoft Agent Framework 1.0 GA + MCP at 110M Monthly Downloads (April 2026)</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.5">Microsoft shipped production-ready convergence of Semantic Kernel + AutoGen into a single SDK with MCP + A2A as first-class integrations. Multi-provider (Claude, OpenAI, Gemini, Bedrock, Ollama), graph-based workflow engine, pluggable memory backends. Meanwhile, MCP hit 110M monthly downloads — up from "experimental release" 18 months ago — now natively supported by OpenAI, Google ADK, LangChain, and Microsoft Fabric. <a href="https://devblogs.microsoft.com/agent-framework/microsoft-agent-framework-version-1-0/" target="_blank" class="il">Microsoft DevBlog</a></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+            <div style="font-size:18px;flex-shrink:0">💰</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">$200/Month Premium Tier Convergence + Cognition/Devin at $25B Valuation</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.5">Claude Code Max, Cursor Ultra, and ChatGPT Pro have all converged at $200/month — the market's revealed willingness to pay for highest usage limits on frontier models. Separately, Cognition AI (Devin) is in talks to raise at a $25B valuation — up from $10.2B in September 2025, marking its third raise in 13 months ($4B → $10.2B → $25B). Clients include Microsoft and Anduril Industries. <a href="https://www.bloomberg.com/news/articles/2026-04-23/ai-coding-firm-cognition-in-funding-talks-at-25-billion-value" target="_blank" class="il">Bloomberg</a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight insight-warning">
+        <div class="insight-title">The Productivity Paradox</div>
+        A 2025 METR RCT found AI tools <strong>increased</strong> completion time by 19% for experienced developers — despite those developers believing they were 24% faster. By 2026, the same cohort showed an 18% speedup. Meanwhile, Atlassian's 2025 DevEx survey reports 68% of developers saving 10+ hours/week. Lesson: self-reporting consistently overstates gains; only 5% of enterprises measure genuine AI ROI. Instrument outcomes, not activity.
+      </div>
+
+      <div class="insight insight-info">
+        <div class="insight-title">New (March 2026): Context Engineering is the Next Frontier</div>
+        Prompt engineering is table stakes. The 2026 practitioner discipline is <strong>context engineering</strong>: designing what information agents see, when, and how. Five strategies: selection, compression, ordering, isolation, format. Key rule: human-written context files outperform LLM-generated ones by 7 percentage points in task success rate. Source: <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" target="_blank" class="il">Anthropic Engineering Blog</a>
+      </div>
+
+      <div class="insight insight-success">
+        <div class="insight-title">The AI-Native Workflow (2026)</div>
+        The most productive developers follow: <strong>Architect (human) → Delegate (AI) → Review (human) → Iterate → Ship (human decision).</strong> Engineers use AI in ~60% of work but fully delegate only 0–20% of tasks. The role is shifting from code writer to outcome orchestrator. Source: <a href="https://resources.anthropic.com/2026-agentic-coding-trends-report" target="_blank" class="il">Anthropic Agentic Coding Trends 2026</a>
+      </div>
+
+      <div class="sources-footer">
+        <div class="sources-footer-title">Sources for this page</div>
+        <div class="sources-list">
+          <a class="source-chip" href="https://techcrunch.com/2026/04/21/spacex-is-working-with-cursor-and-has-an-option-to-buy-the-startup-for-60-billion/" target="_blank"><span class="source-chip-dot"></span>TechCrunch — SpaceX Cursor Option $60B (Apr 21)</a>
+          <a class="source-chip" href="https://www.bloomberg.com/news/articles/2026-04-21/spacex-says-has-agreement-to-acquire-cursor-for-60-billion" target="_blank"><span class="source-chip-dot"></span>Bloomberg — SpaceX-Cursor Deal</a>
+          <a class="source-chip" href="https://www.cnbc.com/2026/04/21/spacex-says-it-can-buy-cursor-later-this-year-for-60-billion-or-pay-10-billion-for-our-work-together/" target="_blank"><span class="source-chip-dot"></span>CNBC — SpaceX-Cursor $10B collaboration fee</a>
+          <a class="source-chip" href="https://awesomeagents.ai/news/uber-burned-2026-ai-budget-april/" target="_blank"><span class="source-chip-dot"></span>Awesome Agents — Uber AI Budget Burned by April</a>
+          <a class="source-chip" href="https://www.faros.ai/blog/ai-software-engineering" target="_blank"><span class="source-chip-dot"></span>Faros AI — Productivity Paradox (22,000 devs)</a>
+          <a class="source-chip" href="https://blog.jetbrains.com/research/2026/04/ai-impact-developer-workflows/" target="_blank"><span class="source-chip-dot"></span>JetBrains — ICSE 2026 HAX Study (800 devs)</a>
+          <a class="source-chip" href="https://devblogs.microsoft.com/agent-framework/microsoft-agent-framework-version-1-0/" target="_blank"><span class="source-chip-dot"></span>Microsoft — Agent Framework 1.0 GA</a>
+          <a class="source-chip" href="https://dev.to/pooyagolchian/mcp-in-2026-the-protocol-that-replaced-every-ai-tool-integration-1ipc" target="_blank"><span class="source-chip-dot"></span>DEV Community — MCP 110M monthly downloads</a>
+          <a class="source-chip" href="https://www.bloomberg.com/news/articles/2026-04-23/ai-coding-firm-cognition-in-funding-talks-at-25-billion-value" target="_blank"><span class="source-chip-dot"></span>Bloomberg — Cognition/Devin $25B valuation talks</a>
+          <a class="source-chip" href="https://www.pwc.com/gx/en/news-room/press-releases/2026/pwc-2026-ai-performance-study.html" target="_blank"><span class="source-chip-dot"></span>PwC — 2026 AI Performance Study (74% value to 20%)</a>
+          <a class="source-chip" href="https://awesomeagents.ai/pricing/ai-coding-tools-pricing/" target="_blank"><span class="source-chip-dot"></span>Awesome Agents — $200/mo premium tier convergence</a>
+          <a class="source-chip" href="https://cloud.google.com/transform/101-real-world-generative-ai-use-cases-from-industry-leaders" target="_blank"><span class="source-chip-dot"></span>Google Cloud — Duolingo Copilot metrics</a>
+          <a class="source-chip" href="https://resources.anthropic.com/2026-agentic-coding-trends-report" target="_blank"><span class="source-chip-dot"></span>Anthropic Agentic Coding Trends 2026</a>
+          <a class="source-chip" href="https://metr.org/blog/2026-02-24-uplift-update/" target="_blank"><span class="source-chip-dot"></span>METR Follow-up — 18% speedup (2026)</a>
+          <a class="source-chip" href="https://dora.dev/research/2025/dora-report/" target="_blank"><span class="source-chip-dot"></span>DORA State of AI-assisted Dev 2025</a>
+          <a class="source-chip" href="https://techcrunch.com/2026/02/12/spotify-says-its-best-developers-havent-written-a-line-of-code-since-december-thanks-to-ai/" target="_blank"><span class="source-chip-dot"></span>Spotify "Honk" — TechCrunch Feb 2026</a>
+          <a class="source-chip" href="https://visualstudiomagazine.com/articles/2026/04/06/microsoft-ships-production-ready-agent-framework-1-0-for-net-and-python.aspx" target="_blank"><span class="source-chip-dot"></span>VS Magazine — Microsoft Agent Framework 1.0</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TOOLS ── -->
+    <div class="page" id="page-tools">
+      <div class="page-header">
+        <h2>AI Coding Tools — 2026 Comparison</h2>
+        <p>All tools now operate in agent mode. Differentiation is reasoning depth, cost, and IDE familiarity.</p>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:24px">
+        <div class="card stat">
+          <div class="stat-value" style="color:#6c63ff">Claude Code</div>
+          <div class="stat-label">Highest reasoning depth</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-value" style="color:#00d4aa">Cursor</div>
+          <div class="stat-label">Best daily velocity</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-value" style="color:#ffd166">Copilot</div>
+          <div class="stat-label">Broadest enterprise reach</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-value" style="color:#ff6b6b">Windsurf</div>
+          <div class="stat-label">Best price/feature ratio</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Tool Comparison Matrix</div>
+            <div class="card-subtitle">Ratings out of 5 — March 2026</div>
+          </div>
+        </div>
+        <table class="tool-table">
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Reasoning</th>
+              <th>Agentic Power</th>
+              <th>IDE Integration</th>
+              <th>Price/mo</th>
+              <th>Best For</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="tool-name"><a href="https://claude.ai/code" target="_blank" class="il">Claude Code</a></div>
+                <div class="tool-company">Anthropic · 80.8% SWE-bench</div>
+              </td>
+              <td><div class="rating-bar" id="r1"></div></td>
+              <td><div class="rating-bar" id="r2"></div></td>
+              <td><div class="rating-bar" id="r3"></div></td>
+              <td><span class="badge badge-purple">$20</span></td>
+              <td style="color:var(--text2);font-size:12px">Senior backend, ML, complex work</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="tool-name"><a href="https://www.cursor.com" target="_blank" class="il">Cursor</a></div>
+                <div class="tool-company">Anysphere · VS Code fork</div>
+              </td>
+              <td><div class="rating-bar" id="r4"></div></td>
+              <td><div class="rating-bar" id="r5"></div></td>
+              <td><div class="rating-bar" id="r6"></div></td>
+              <td><span class="badge badge-purple">$20</span></td>
+              <td style="color:var(--text2);font-size:12px">Frontend, full-stack, daily shipping</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="tool-name"><a href="https://github.com/features/copilot" target="_blank" class="il">GitHub Copilot</a></div>
+                <div class="tool-company">Microsoft · 42% market share</div>
+              </td>
+              <td><div class="rating-bar" id="r7"></div></td>
+              <td><div class="rating-bar" id="r8"></div></td>
+              <td><div class="rating-bar" id="r9"></div></td>
+              <td><span class="badge badge-green">$10–19</span></td>
+              <td style="color:var(--text2);font-size:12px">Enterprise, GitHub-native teams</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="tool-name"><a href="https://codeium.com/windsurf" target="_blank" class="il">Windsurf</a></div>
+                <div class="tool-company">Codeium · #1 LogRocket ranking</div>
+              </td>
+              <td><div class="rating-bar" id="r10"></div></td>
+              <td><div class="rating-bar" id="r11"></div></td>
+              <td><div class="rating-bar" id="r12"></div></td>
+              <td><span class="badge badge-green">Low</span></td>
+              <td style="color:var(--text2);font-size:12px">Cost-conscious, full-stack</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="tool-name"><a href="https://openai.com/codex" target="_blank" class="il">Codex</a></div>
+                <div class="tool-company">OpenAI · Agent-first 2025 relaunch</div>
+              </td>
+              <td><div class="rating-bar" id="r13"></div></td>
+              <td><div class="rating-bar" id="r14"></div></td>
+              <td><div class="rating-bar" id="r15"></div></td>
+              <td><span class="badge badge-gray">Varies</span></td>
+              <td style="color:var(--text2);font-size:12px">Backend automation, CI/CD agents</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="tool-name"><a href="https://kiro.dev" target="_blank" class="il">Kiro</a></div>
+                <div class="tool-company">AWS · Spec-driven development</div>
+              </td>
+              <td><div class="rating-bar" id="r16"></div></td>
+              <td><div class="rating-bar" id="r17"></div></td>
+              <td><div class="rating-bar" id="r18"></div></td>
+              <td><span class="badge badge-gray">Varies</span></td>
+              <td style="color:var(--text2);font-size:12px">Enterprise, spec-first, compliance</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">Claude Code Strengths</div>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+            <li style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--green)">✓</span><span style="font-size:12px;color:var(--text2)">Highest SWE-bench score: <strong style="color:var(--text)">80.8%</strong></span></li>
+            <li style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--green)">✓</span><span style="font-size:12px;color:var(--text2)">1M token context — entire large codebases</span></li>
+            <li style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--green)">✓</span><span style="font-size:12px;color:var(--text2)">5.5x more token-efficient than Cursor</span></li>
+            <li style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--green)">✓</span><span style="font-size:12px;color:var(--text2)">Zero security issues in enterprise evaluations</span></li>
+            <li style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--green)">✓</span><span style="font-size:12px;color:var(--text2)">46% "most loved" developer rating (2026)</span></li>
+            <li style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--red)">✗</span><span style="font-size:12px;color:var(--text2)">Terminal-native — unfamiliar for GUI-only devs</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">The "Use Both" Strategy</div>
+          <div class="insight insight-success" style="margin-bottom:12px">
+            <div class="insight-title">Recommended for Senior Engineers</div>
+            Claude Code + Cursor in parallel — ~$40/month total
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:var(--surface2);border-radius:8px;padding:10px 14px">
+              <div style="font-size:12px;font-weight:600;color:#6c63ff;margin-bottom:2px"><a href="https://claude.ai/code" target="_blank" class="il" style="color:#6c63ff">Claude Code</a></div>
+              <div style="font-size:11px;color:var(--text2)">Architecture decisions, multi-service changes, security analysis, complex reasoning</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:10px 14px">
+              <div style="font-size:12px;font-weight:600;color:#00d4aa;margin-bottom:2px"><a href="https://www.cursor.com" target="_blank" class="il" style="color:#00d4aa">Cursor</a></div>
+              <div style="font-size:11px;color:var(--text2)">Fast daily coding, component work, quick iterations, autocomplete</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Open Source Tools Section -->
+      <div class="card" style="margin-top:24px">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Open Source AI Agent Tools — 2026</div>
+            <div class="card-subtitle">Self-hostable, model-agnostic, and enterprise-ready — updated April 28, 2026</div>
+          </div>
+          <span class="badge badge-green">Open Source</span>
+        </div>
+
+        <!-- Coding Agents -->
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Autonomous Coding Agents</div>
+          <table class="tool-table">
+            <thead>
+              <tr>
+                <th>Tool</th>
+                <th>Stars</th>
+                <th>Interface</th>
+                <th>Benchmark</th>
+                <th>Best For</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="tool-name"><a href="https://openhands.dev" target="_blank" class="il">OpenHands</a></div>
+                  <div class="tool-company">Princeton/Stanford lineage · Model-agnostic</div>
+                </td>
+                <td><span class="badge badge-green">68k ★</span></td>
+                <td style="font-size:12px;color:var(--text2)">Web UI + Kubernetes</td>
+                <td><span class="badge badge-purple">72% SWE-Bench</span></td>
+                <td style="font-size:12px;color:var(--text2)">Enterprise self-hosted, data-sensitive orgs</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="tool-name"><a href="https://github.com/cline/cline" target="_blank" class="il">Cline</a></div>
+                  <div class="tool-company">VS Code extension · Bring your own API key</div>
+                </td>
+                <td><span class="badge badge-green">58k ★</span></td>
+                <td style="font-size:12px;color:var(--text2)">VS Code sidebar</td>
+                <td style="font-size:12px;color:var(--text2)">—</td>
+                <td style="font-size:12px;color:var(--text2)">IDE-native, enterprise traction</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="tool-name"><a href="https://aider.chat" target="_blank" class="il">Aider</a></div>
+                  <div class="tool-company">Paul Gauthier · CLI + git-native</div>
+                </td>
+                <td><span class="badge badge-green">41k ★</span></td>
+                <td style="font-size:12px;color:var(--text2)">Terminal / CLI</td>
+                <td style="font-size:12px;color:var(--text2)">—</td>
+                <td style="font-size:12px;color:var(--text2)">Git-integrated pair programming, scripting workflows</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="tool-name"><a href="https://opencode.ai" target="_blank" class="il">OpenCode</a></div>
+                  <div class="tool-company">New 2026 entrant · Open source</div>
+                </td>
+                <td><span class="badge badge-yellow">New</span></td>
+                <td style="font-size:12px;color:var(--text2)">Web + CLI</td>
+                <td style="font-size:12px;color:var(--text2)">—</td>
+                <td style="font-size:12px;color:var(--text2)">Alternative to proprietary coding agents</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Orchestration Frameworks -->
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Agent Orchestration Frameworks</div>
+          <table class="tool-table">
+            <thead>
+              <tr>
+                <th>Framework</th>
+                <th>Language</th>
+                <th>Maturity</th>
+                <th>Strength</th>
+                <th>When to Use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="tool-name"><a href="https://github.com/langchain-ai/langgraph" target="_blank" class="il">LangGraph</a></div>
+                  <div class="tool-company">LangChain · Production-grade stateful workflows</div>
+                </td>
+                <td style="font-size:12px;color:var(--text2)">Python / JS</td>
+                <td><span class="badge badge-green">Mature</span></td>
+                <td style="font-size:12px;color:var(--text2)">Stateful graphs, failure recovery</td>
+                <td style="font-size:12px;color:var(--text2)">CI/CD pipelines, high-reliability enterprise agents</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="tool-name"><a href="https://github.com/crewAIInc/crewAI" target="_blank" class="il">CrewAI</a></div>
+                  <div class="tool-company">CrewAI Inc · Role-based multi-agent teams</div>
+                </td>
+                <td style="font-size:12px;color:var(--text2)">Python</td>
+                <td><span class="badge badge-green">Mature</span></td>
+                <td style="font-size:12px;color:var(--text2)">Fast team assembly, role-based delegation</td>
+                <td style="font-size:12px;color:var(--text2)">Business workflow automation, quick multi-agent POCs</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="tool-name"><a href="https://github.com/microsoft/autogen" target="_blank" class="il">AutoGen</a></div>
+                  <div class="tool-company">Microsoft · Now merged into Agent Framework 1.0</div>
+                </td>
+                <td style="font-size:12px;color:var(--text2)">Python / .NET</td>
+                <td><span class="badge badge-blue">Merged →</span></td>
+                <td style="font-size:12px;color:var(--text2)">Conversational agent patterns</td>
+                <td style="font-size:12px;color:var(--text2)">Use Microsoft Agent Framework 1.0 for new projects</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="tool-name"><a href="https://github.com/langchain-ai/open-swe" target="_blank" class="il">Open SWE</a></div>
+                  <div class="tool-company">LangChain · Captures Stripe/Ramp/Coinbase internal agent architecture</div>
+                </td>
+                <td style="font-size:12px;color:var(--text2)">Python</td>
+                <td><span class="badge badge-yellow">New 2026</span></td>
+                <td style="font-size:12px;color:var(--text2)">Internal coding agent pattern: sandboxes + Slack + ~500 curated tools</td>
+                <td style="font-size:12px;color:var(--text2)">Building async internal coding agents for engineering orgs</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="tool-name"><a href="https://github.com/pydantic/pydantic-ai" target="_blank" class="il">PydanticAI</a></div>
+                  <div class="tool-company">Pydantic · Type-safe agent pipelines</div>
+                </td>
+                <td style="font-size:12px;color:var(--text2)">Python</td>
+                <td><span class="badge badge-yellow">Growing</span></td>
+                <td style="font-size:12px;color:var(--text2)">Strong type guarantees, correctness-first</td>
+                <td style="font-size:12px;color:var(--text2)">Teams prioritizing type safety in agent outputs</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Infrastructure & Protocols -->
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Infrastructure, Protocols &amp; Local Models</div>
+          <div class="grid-3">
+            <div style="background:var(--surface2);border-radius:8px;padding:14px 16px;border:1px solid var(--border)">
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px"><a href="https://modelcontextprotocol.io" target="_blank" class="il">MCP</a></div>
+              <div style="font-size:11px;color:var(--accent2);margin-bottom:6px">110M monthly downloads · De facto tool protocol</div>
+              <div style="font-size:12px;color:var(--text2)">Standardized agent ↔ tool communication. 50+ official Anthropic servers, 150+ community. Natively supported by OpenAI, Google, Microsoft, LangChain.</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:14px 16px;border:1px solid var(--border)">
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px"><a href="https://google.github.io/A2A/" target="_blank" class="il">A2A Protocol</a></div>
+              <div style="font-size:11px;color:var(--accent2);margin-bottom:6px">Google + Linux Foundation · Agent-to-agent</div>
+              <div style="font-size:12px;color:var(--text2)">Complement to MCP: MCP handles agent ↔ tools, A2A handles agent ↔ agent communication. Emerging as the cross-vendor agent collaboration standard.</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:14px 16px;border:1px solid var(--border)">
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px"><a href="https://github.com/ollama/ollama" target="_blank" class="il">Ollama</a></div>
+              <div style="font-size:11px;color:var(--accent2);margin-bottom:6px">Local model hosting · Privacy-first</div>
+              <div style="font-size:12px;color:var(--text2)">Run Llama 3, Mistral, Gemma, CodeLlama locally. Required for air-gapped environments. Integrates with LangGraph, CrewAI, OpenHands, and Cline via local API.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="insight insight-info" style="margin-top:16px;margin-bottom:0">
+          <div class="insight-title">Open Source vs. Proprietary: When to Choose</div>
+          Choose open source when: data cannot leave your VPC (OpenHands + Ollama), you need to customize agent behavior at the framework level (LangGraph/CrewAI), or you're building an internal coding agent platform (Open SWE pattern). Choose proprietary when: time-to-value matters more than control, your team is small, or you need the highest benchmark performance (Claude Code at 80.8% SWE-Bench vs. OpenHands at 72%).
+        </div>
+      </div>
+
+      <div class="sources-footer">
+        <div class="sources-footer-title">Sources for this page</div>
+        <div class="sources-list">
+          <a class="source-chip" href="https://www.builder.io/blog/cursor-vs-claude-code" target="_blank"><span class="source-chip-dot"></span>Builder.io — Claude Code vs Cursor 2026</a>
+          <a class="source-chip" href="https://northflank.com/blog/claude-code-vs-cursor-comparison" target="_blank"><span class="source-chip-dot"></span>Northflank — Complete Comparison</a>
+          <a class="source-chip" href="https://lushbinary.com/blog/ai-coding-agents-comparison-cursor-windsurf-claude-copilot-kiro-2026/" target="_blank"><span class="source-chip-dot"></span>Lushbinary — 6-Tool Comparison 2026</a>
+          <a class="source-chip" href="https://www.faros.ai/blog/best-ai-coding-agents-2026" target="_blank"><span class="source-chip-dot"></span>Faros AI — Best AI Coding Agents 2026</a>
+          <a class="source-chip" href="https://render.com/blog/ai-coding-agents-benchmark" target="_blank"><span class="source-chip-dot"></span>Render — AI Coding Agents Benchmark</a>
+          <a class="source-chip" href="https://blog.jetbrains.com/research/2025/10/state-of-developer-ecosystem-2025/" target="_blank"><span class="source-chip-dot"></span>JetBrains Dev Ecosystem 2025</a>
+          <a class="source-chip" href="https://dev.to/paulthedev/i-built-the-same-app-5-ways-cursor-vs-claude-code-vs-windsurf-vs-replit-agent-vs-github-copilot-50m2" target="_blank"><span class="source-chip-dot"></span>DEV.to — Built Same App 5 Ways</a>
+          <a class="source-chip" href="https://openhands.dev/blog/openhands-codeact-21-an-open-state-of-the-art-software-development-agent" target="_blank"><span class="source-chip-dot"></span>OpenHands — CodeAct 2.1 (72% SWE-Bench)</a>
+          <a class="source-chip" href="https://github.com/cline/cline" target="_blank"><span class="source-chip-dot"></span>Cline — GitHub (58k stars)</a>
+          <a class="source-chip" href="https://aider.chat" target="_blank"><span class="source-chip-dot"></span>Aider — CLI pair programming (41k stars)</a>
+          <a class="source-chip" href="https://blog.langchain.com/open-swe-an-open-source-framework-for-internal-coding-agents/" target="_blank"><span class="source-chip-dot"></span>LangChain — Open SWE (Stripe/Ramp/Coinbase pattern)</a>
+          <a class="source-chip" href="https://dev.to/pooyagolchian/mcp-in-2026-the-protocol-that-replaced-every-ai-tool-integration-1ipc" target="_blank"><span class="source-chip-dot"></span>DEV Community — MCP 110M monthly downloads</a>
+          <a class="source-chip" href="https://devblogs.microsoft.com/agent-framework/microsoft-agent-framework-version-1-0/" target="_blank"><span class="source-chip-dot"></span>Microsoft Agent Framework 1.0 (AutoGen + Semantic Kernel)</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ROLES ── -->
+    <div class="page" id="page-roles">
+      <div class="page-header">
+        <h2>Best Practices by Developer Role</h2>
+        <p>Role-specific AI usage guidance — tools, use cases, and what AI cannot replace</p>
+      </div>
+
+      <div class="role-tabs">
+        <div class="role-tab active" onclick="showRole('frontend', this)">Frontend</div>
+        <div class="role-tab" onclick="showRole('backend', this)">Backend</div>
+        <div class="role-tab" onclick="showRole('ml', this)">ML / Data Science</div>
+        <div class="role-tab" onclick="showRole('devops', this)">DevOps / SRE</div>
+        <div class="role-tab" onclick="showRole('universal', this)">Universal</div>
+      </div>
+
+      <!-- Frontend -->
+      <div class="role-content active" id="role-frontend">
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">Recommended Tools</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="badge badge-purple">Primary</span>
+                <span style="font-size:13px;font-weight:600">Cursor</span>
+                <span style="font-size:11px;color:var(--text2)">Fast iteration, component-level work</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="badge badge-gray">Secondary</span>
+                <span style="font-size:13px;font-weight:600">Claude Code</span>
+                <span style="font-size:11px;color:var(--text2)">Complex state management / full-page refactors</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="badge badge-blue">Design</span>
+                <span style="font-size:13px;font-weight:600">Vercel v0</span>
+                <span style="font-size:11px;color:var(--text2)">Design-to-code, Figma AI plugins</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">What AI Cannot Replace</div>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:6px">
+              <li style="font-size:12px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Visual design judgment and pixel precision</li>
+              <li style="font-size:12px;color:var(--text2)"><span style="color:var(--red)">✗ </span>User empathy and UX decision-making</li>
+              <li style="font-size:12px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Design system architecture and token governance</li>
+              <li style="font-size:12px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Performance profiling and optimization intuition</li>
+              <li style="font-size:12px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Cross-team design-engineering collaboration</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">High-Value AI Use Cases</div>
+          <div class="use-case-grid">
+            <div class="use-case-item"><div class="use-case-num">1</div><div class="use-case-text"><div class="use-case-title">Component Scaffolding</div>Generate boilerplate React/Vue/Angular components with correct prop types</div></div>
+            <div class="use-case-item"><div class="use-case-num">2</div><div class="use-case-text"><div class="use-case-title">CSS / Tailwind Generation</div>Describe visual intent in natural language; let AI produce styles</div></div>
+            <div class="use-case-item"><div class="use-case-num">3</div><div class="use-case-text"><div class="use-case-title">Test Writing</div>Generate unit and snapshot tests for UI components</div></div>
+            <div class="use-case-item"><div class="use-case-num">4</div><div class="use-case-text"><div class="use-case-title">Accessibility Audits</div>Prompt AI to review components for ARIA compliance</div></div>
+            <div class="use-case-item"><div class="use-case-num">5</div><div class="use-case-text"><div class="use-case-title">Design System Enforcement</div>Check components against design system tokens consistently</div></div>
+            <div class="use-case-item"><div class="use-case-num">6</div><div class="use-case-text"><div class="use-case-title">Cross-browser Debugging</div>Describe visual bug; AI suggests responsive / browser-specific fixes</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backend -->
+      <div class="role-content" id="role-backend">
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">Recommended Tools</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="badge badge-purple">Primary</span>
+                <span style="font-size:13px;font-weight:600">Claude Code</span>
+                <span style="font-size:11px;color:var(--text2)">Architectural complexity, security analysis</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="badge badge-gray">Secondary</span>
+                <span style="font-size:13px;font-weight:600">Cursor / Codex</span>
+                <span style="font-size:11px;color:var(--text2)">API scaffolding, routine CRUD</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="badge badge-blue">CI/CD</span>
+                <span style="font-size:13px;font-weight:600">Codex or Claude Code</span>
+                <span style="font-size:11px;color:var(--text2)">Automated pipeline agents</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">Key Cautions</div>
+            <div class="insight insight-warning" style="margin:0">
+              <div class="insight-title">⚠ Database Migrations</div>
+              Never apply AI-generated migrations without manual review and staging validation. AI-generated DB changes have caused production incidents.
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">High-Value AI Use Cases</div>
+          <div class="use-case-grid">
+            <div class="use-case-item"><div class="use-case-num">1</div><div class="use-case-text"><div class="use-case-title">API Scaffolding</div>Generate REST/GraphQL endpoints with validation and error handling</div></div>
+            <div class="use-case-item"><div class="use-case-num">2</div><div class="use-case-text"><div class="use-case-title">Database Schema Design</div>Describe data model in plain English; AI generates migration scripts</div></div>
+            <div class="use-case-item"><div class="use-case-num">3</div><div class="use-case-text"><div class="use-case-title">Test Generation</div>Integration tests, edge case identification, load test scripts</div></div>
+            <div class="use-case-item"><div class="use-case-num">4</div><div class="use-case-text"><div class="use-case-title">Security Scanning</div>Audit code for OWASP Top 10 vulnerabilities — use Claude Code for best results</div></div>
+            <div class="use-case-item"><div class="use-case-num">5</div><div class="use-case-text"><div class="use-case-title">Documentation</div>Generate OpenAPI specs, README docs, inline comments from code</div></div>
+            <div class="use-case-item"><div class="use-case-num">6</div><div class="use-case-text"><div class="use-case-title">Log Analysis</div>Feed log patterns to AI for anomaly detection and debugging suggestions</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ML -->
+      <div class="role-content" id="role-ml">
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">Recommended Tools</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="badge badge-purple">Primary</span>
+                <span style="font-size:13px;font-weight:600">Claude Code</span>
+                <span style="font-size:11px;color:var(--text2)">Complex model architectures, pipeline debugging</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="badge badge-gray">Exploration</span>
+                <span style="font-size:13px;font-weight:600">Jupyter AI + Cursor</span>
+                <span style="font-size:11px;color:var(--text2)">Notebook-based iteration</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">Critical Caution</div>
+            <div class="insight insight-warning" style="margin:0">
+              <div class="insight-title">⚠ Mathematical Correctness</div>
+              AI-generated ML code is NOT guaranteed mathematically correct. Always verify loss functions, metrics, and data splits. AI bugs in training can cost hundreds of GPU-hours.
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">High-Value AI Use Cases</div>
+          <div class="use-case-grid">
+            <div class="use-case-item"><div class="use-case-num">1</div><div class="use-case-text"><div class="use-case-title">Experiment Scaffolding</div>Generate training scripts, evaluation harnesses, logging setups from descriptions</div></div>
+            <div class="use-case-item"><div class="use-case-num">2</div><div class="use-case-text"><div class="use-case-title">Data Pipeline Generation</div>Preprocessing, augmentation, and validation code from plain English specs</div></div>
+            <div class="use-case-item"><div class="use-case-num">3</div><div class="use-case-text"><div class="use-case-title">Training Debug</div>Describe symptoms; AI suggests fixes (learning rate, batch norm, gradient issues)</div></div>
+            <div class="use-case-item"><div class="use-case-num">4</div><div class="use-case-text"><div class="use-case-title">Research Paper Implementation</div>Feed an arXiv paper; AI scaffolds the implementation</div></div>
+            <div class="use-case-item"><div class="use-case-num">5</div><div class="use-case-text"><div class="use-case-title">MLOps Scaffolding</div>Generate Dockerfile, Kubernetes configs, serving code for model deployment</div></div>
+            <div class="use-case-item"><div class="use-case-num">6</div><div class="use-case-text"><div class="use-case-title">Auto-EDA</div>Automated exploratory data analysis — visualizations and statistical summaries</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DevOps -->
+      <div class="role-content" id="role-devops">
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">Recommended Tools</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="badge badge-purple">Primary</span>
+                <span style="font-size:13px;font-weight:600">Claude Code</span>
+                <span style="font-size:11px;color:var(--text2)">IaC generation, complex YAML/Terraform, incidents</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="badge badge-gray">GitHub Actions</span>
+                <span style="font-size:13px;font-weight:600">GitHub Copilot</span>
+                <span style="font-size:11px;color:var(--text2)">Tightest GitHub Actions integration</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">Highest ROI Use Case</div>
+            <div style="background:var(--surface2);border-radius:8px;padding:14px">
+              <div style="font-size:13px;font-weight:600;margin-bottom:6px">Runbook Automation</div>
+              <div style="font-size:12px;color:var(--text2)">Converting manual runbooks to automation scripts is the single highest-ROI use case for platform teams. Feed existing runbook; AI generates the script.</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">High-Value AI Use Cases</div>
+          <div class="use-case-grid">
+            <div class="use-case-item"><div class="use-case-num">1</div><div class="use-case-text"><div class="use-case-title">Infrastructure as Code</div>Terraform, Pulumi, CloudFormation from natural language specifications</div></div>
+            <div class="use-case-item"><div class="use-case-num">2</div><div class="use-case-text"><div class="use-case-title">CI/CD Pipeline Construction</div>GitHub Actions, GitLab CI workflows from deployment requirements</div></div>
+            <div class="use-case-item"><div class="use-case-num">3</div><div class="use-case-text"><div class="use-case-title">Incident Analysis</div>Feed runbooks + error logs; AI suggests RCA and remediation steps</div></div>
+            <div class="use-case-item"><div class="use-case-num">4</div><div class="use-case-text"><div class="use-case-title">Kubernetes Manifests</div>Deployments, services, ingress configs from service descriptions</div></div>
+            <div class="use-case-item"><div class="use-case-num">5</div><div class="use-case-text"><div class="use-case-title">Security Policy Generation</div>IAM policies, network policies, security group rules — always review before applying</div></div>
+            <div class="use-case-item"><div class="use-case-num">6</div><div class="use-case-text"><div class="use-case-title">Monitoring Configuration</div>Prometheus rules, alerting configs, dashboard generation</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Universal -->
+      <div class="role-content" id="role-universal">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">Universal Best Practices — All Roles</div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;gap:14px;align-items:flex-start">
+              <div style="width:32px;height:32px;border-radius:8px;background:rgba(108,99,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);flex-shrink:0">1</div>
+              <div><div style="font-size:13px;font-weight:600;margin-bottom:3px">Supervised Collaboration Model</div><div style="font-size:12px;color:var(--text2)">Don't let AI agents code entire features unattended. Think of AI as a brilliant junior developer: fast, capable, but lacking deep production judgment. Keep oversight at each step.</div></div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:flex-start">
+              <div style="width:32px;height:32px;border-radius:8px;background:rgba(108,99,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);flex-shrink:0">2</div>
+              <div><div style="font-size:13px;font-weight:600;margin-bottom:3px">Context is Everything</div><div style="font-size:12px;color:var(--text2)">Always provide architectural context before agentic tasks. Use CLAUDE.md or .cursorrules to encode standards. Include constraints explicitly: performance budgets, security requirements, API contracts.</div></div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:flex-start">
+              <div style="width:32px;height:32px;border-radius:8px;background:rgba(108,99,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);flex-shrink:0">3</div>
+              <div><div style="font-size:13px;font-weight:600;margin-bottom:3px">Small Increments + Test After Each</div><div style="font-size:12px;color:var(--text2)">Generate code in small, verifiable increments. Run tests after each AI-generated integration. Never let AI generate hundreds of lines without a verification checkpoint.</div></div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:flex-start">
+              <div style="width:32px;height:32px;border-radius:8px;background:rgba(108,99,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);flex-shrink:0">4</div>
+              <div><div style="font-size:13px;font-weight:600;margin-bottom:3px">Prompt Engineering is a Core Skill</div><div style="font-size:12px;color:var(--text2)">Be explicit about what you do NOT want (e.g., "do not add new dependencies"). Specify output format, language version, framework conventions. Define success criteria upfront.</div></div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:flex-start">
+              <div style="width:32px;height:32px;border-radius:8px;background:rgba(108,99,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);flex-shrink:0">5</div>
+              <div><div style="font-size:13px;font-weight:600;margin-bottom:3px">Review AI Code as Carefully as Human Code</div><div style="font-size:12px;color:var(--text2)">AI code passes tests and matches conventions — but hides subtle bugs and edge cases. You are accountable for what ships, not the AI.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sources-footer">
+        <div class="sources-footer-title">Sources for this page</div>
+        <div class="sources-list">
+          <a class="source-chip" href="https://medium.com/@addyosmani/my-llm-coding-workflow-going-into-2026-52fe1681325e" target="_blank"><span class="source-chip-dot"></span>Addy Osmani — LLM Coding Workflow 2026</a>
+          <a class="source-chip" href="https://addyo.substack.com/p/the-reality-of-ai-assisted-software" target="_blank"><span class="source-chip-dot"></span>Addy Osmani — Reality of AI-Assisted Engineering</a>
+          <a class="source-chip" href="https://www.cortex.io/post/the-engineering-leaders-guide-to-ai-tools-for-developers-in-2026" target="_blank"><span class="source-chip-dot"></span>Cortex — Engineering Leader's Guide to AI 2026</a>
+          <a class="source-chip" href="https://dev.to/ranndy360/ai-coding-best-practices-in-2025-4eel" target="_blank"><span class="source-chip-dot"></span>DEV Community — AI Coding Best Practices 2025</a>
+          <a class="source-chip" href="https://resources.anthropic.com/2026-agentic-coding-trends-report" target="_blank"><span class="source-chip-dot"></span>Anthropic Agentic Coding Trends 2026</a>
+          <a class="source-chip" href="https://huggingface.co/blog/Svngoku/agentic-coding-trends-2026" target="_blank"><span class="source-chip-dot"></span>HuggingFace — Agentic Coding Trends Implementation</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AGENTS ── -->
+    <div class="page" id="page-agents">
+      <div class="page-header">
+        <h2>Agent Catalog — Build These First</h2>
+        <p>14 agents ranked by impact. Multi-agent systems report 3x faster completion and 60% better accuracy vs. single-agent.</p>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:24px">
+        <div class="card stat">
+          <div class="stat-value" style="color:#6c63ff">20</div>
+          <div class="stat-label">Autonomous actions/session</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-value" style="color:#00d4aa">3x</div>
+          <div class="stat-label">Multi-agent speedup</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-value" style="color:#ffd166">60%</div>
+          <div class="stat-label">Better accuracy (multi-agent)</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-value" style="color:#ff6b6b">1,445%</div>
+          <div class="stat-label">Surge in enterprise agent inquiries</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:10px;font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Development Lifecycle</div>
+      <div class="agent-grid" style="margin-bottom:20px">
+        <div class="agent-card">
+          <div class="agent-card-header"><span class="agent-num">#1 HIGHEST ROI</span><span class="badge badge-green">15–30 min/PR saved</span></div>
+          <div class="agent-title">PR Automation Agent</div>
+          <div class="agent-desc">Auto-generates PR descriptions, risk assessments, test summaries, and reviewer suggestions on every git push.</div>
+          <div class="agent-meta"><span class="badge badge-gray">Trigger: git push</span><span class="badge badge-purple">Claude Code / Copilot</span></div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-card-header"><span class="agent-num">#2</span><span class="badge badge-green">60–70% issues caught</span></div>
+          <div class="agent-title">Code Review Agent</div>
+          <div class="agent-desc">First-pass review for security issues, performance problems, missing tests, and style violations before human reviewers.</div>
+          <div class="agent-meta"><span class="badge badge-gray">Trigger: PR opened</span><span class="badge badge-purple">Claude Code</span></div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-card-header"><span class="agent-num">#3</span><span class="badge badge-green">Coverage 60% → 85%+</span></div>
+          <div class="agent-title">Test Generation Agent</div>
+          <div class="agent-desc">Automatically generates unit tests, edge cases, and mock setups for new or modified functions.</div>
+          <div class="agent-meta"><span class="badge badge-gray">Trigger: PR opened</span><span class="badge badge-purple">Claude Code</span></div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-card-header"><span class="agent-num">#4</span><span class="badge badge-yellow">Eliminates manual work</span></div>
+          <div class="agent-title">Dependency Update Agent</div>
+          <div class="agent-desc">Weekly automated PRs for dependency upgrades with breaking change summaries and required code updates.</div>
+          <div class="agent-meta"><span class="badge badge-gray">Trigger: weekly scheduled</span><span class="badge badge-purple">Claude Code + Renovate</span></div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-card-header"><span class="agent-num">#5</span><span class="badge badge-yellow">Eliminates doc lag</span></div>
+          <div class="agent-title">Documentation Agent</div>
+          <div class="agent-desc">Keeps README, API specs, and changelogs in sync with code changes. Triggers on PR merge to main.</div>
+          <div class="agent-meta"><span class="badge badge-gray">Trigger: PR merge</span><span class="badge badge-purple">Claude Code</span></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:10px;font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Quality & Security</div>
+      <div class="agent-grid" style="margin-bottom:20px">
+        <div class="agent-card">
+          <div class="agent-card-header"><span class="agent-num">#6</span><span class="badge badge-red">Security critical</span></div>
+          <div class="agent-title">Security Audit Agent</div>
+          <div class="agent-desc">Flags OWASP Top 10 issues on every PR with CVSS severity scores and remediation suggestions.</div>
+          <div class="agent-meta"><span class="badge badge-gray">Trigger: PR opened</span><span class="badge badge-purple">Claude Code</span></div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-card-header"><span class="agent-num">#7</span><span class="badge badge-yellow">Prevents regressions</span></div>
+          <div class="agent-title">Performance Regression Agent</div>
+          <div class="agent-desc">Detects performance regressions, attributes slowdowns to specific code changes, and suggests optimizations.</div>
+          <div class="agent-meta"><span class="badge badge-gray">Trigger: PR on hot paths</span><span class="badge badge-purple">Claude Code + benchmarks</span></div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-card-header"><span class="agent-num">#8</span><span class="badge badge-yellow">Quality enforcement</span></div>
+          <div class="agent-title">Quality Gate Agent</div>
+          <div class="agent-desc">Enforces quality standards before merge — refuses to approve until all checks pass with a detailed remediation plan.</div>
+          <div class="agent-meta"><span class="badge badge-gray">Trigger: pre-merge</span><span class="badge badge-purple">Claude Code / Codex</span></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:10px;font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Developer Support</div>
+      <div class="agent-grid" style="margin-bottom:20px">
+        <div class="agent-card">
+          <div class="agent-card-header"><span class="agent-num">#9</span><span class="badge badge-green">3mo → 4–6wk ramp-up</span></div>
+          <div class="agent-title">Onboarding Agent</div>
+          <div class="agent-desc">Guides new developers through codebase ramp-up with contextual answers, code walkthroughs, and suggested starting tasks via Slack or IDE.</div>
+          <div class="agent-meta"><span class="badge badge-gray">Trigger: on-demand</span><span class="badge badge-purple">Claude Code + RAG</span></div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-card-header"><span class="agent-num">#10</span><span class="badge badge-green">30–50% MTTR reduction</span></div>
+          <div class="agent-title">Incident Response Agent</div>
+          <div class="agent-desc">Assists SREs during incidents with log analysis, root cause hypotheses, remediation steps, and rollback recommendations.</div>
+          <div class="agent-meta"><span class="badge badge-gray">Trigger: PagerDuty alert</span><span class="badge badge-purple">Claude Code</span></div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-card-header"><span class="agent-num">#11</span><span class="badge badge-blue">Better decisions</span></div>
+          <div class="agent-title">Architecture Decision Agent</div>
+          <div class="agent-desc">Analyzes architectural options with tradeoffs, constraints, and implementation sketches for design decisions.</div>
+          <div class="agent-meta"><span class="badge badge-gray">Trigger: on-demand</span><span class="badge badge-purple">Claude Code</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">Orchestration Framework Guide</div>
+        <div class="grid-2">
+          <div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="background:var(--surface2);border-radius:8px;padding:12px 14px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:13px;font-weight:600"><a href="https://langchain-ai.github.io/langgraph/" target="_blank" class="il">LangGraph</a></span><span class="badge badge-red">Production grade</span></div>
+                <div style="font-size:11px;color:var(--text2)">Best when failure costs are high. Most control, steeper learning curve. Use for CI/CD pipelines and enterprise reliability.</div>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:12px 14px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:13px;font-weight:600"><a href="https://www.crewai.com" target="_blank" class="il">CrewAI</a></span><span class="badge badge-yellow">Fast to build</span></div>
+                <div style="font-size:11px;color:var(--text2)">Best for quickly automating business workflows with teams of specialized agents. Less control over low-level behavior.</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="background:var(--surface2);border-radius:8px;padding:12px 14px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:13px;font-weight:600"><a href="https://ai.pydantic.dev" target="_blank" class="il">PydanticAI</a></span><span class="badge badge-blue">Type safe</span></div>
+                <div style="font-size:11px;color:var(--text2)">TypeScript-style safety for agent pipelines. Best for teams prioritizing correctness. Newer, smaller ecosystem.</div>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:12px 14px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:13px;font-weight:600"><a href="https://docs.anthropic.com/en/docs/agents" target="_blank" class="il">Claude Agent Teams</a></span><span class="badge badge-green">No framework needed</span></div>
+                <div style="font-size:11px;color:var(--text2)">Native integration with Claude Code. Best when Claude Code is your primary tool. Spawns parallel subagents for complex tasks.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sources-footer">
+        <div class="sources-footer-title">Sources for this page</div>
+        <div class="sources-list">
+          <a class="source-chip" href="https://resources.anthropic.com/2026-agentic-coding-trends-report" target="_blank"><span class="source-chip-dot"></span>Anthropic Agentic Coding Trends 2026</a>
+          <a class="source-chip" href="https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns" target="_blank"><span class="source-chip-dot"></span>Microsoft — AI Agent Design Patterns</a>
+          <a class="source-chip" href="https://blog.n8n.io/ai-agent-orchestration-frameworks/" target="_blank"><span class="source-chip-dot"></span>n8n — Agent Orchestration Frameworks</a>
+          <a class="source-chip" href="https://www.cursor-ide.com/blog/claude-subagents" target="_blank"><span class="source-chip-dot"></span>Cursor IDE — Claude Subagents Guide</a>
+          <a class="source-chip" href="https://kanerika.com/blogs/ai-agent-orchestration/" target="_blank"><span class="source-chip-dot"></span>Kanerika — Agent Orchestration 2026</a>
+          <a class="source-chip" href="https://www.ibm.com/think/topics/ai-agent-orchestration" target="_blank"><span class="source-chip-dot"></span>IBM — AI Agent Orchestration Fundamentals</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── METRICS ── -->
+    <div class="page" id="page-metrics">
+      <div class="page-header">
+        <h2>Measuring Developer Productivity</h2>
+        <p>AI has created a measurement paradox — individual output metrics spike while org-level delivery stays flat. Use a layered approach.</p>
+      </div>
+
+      <div class="insight insight-warning" style="margin-bottom:20px">
+        <div class="insight-title">⚠ The Velocity Trap</div>
+        "Higher velocity doesn't mean more value — if you're shipping more features but they're buggy, AI helped you build the wrong thing faster." Always pair velocity metrics with Change Failure Rate and Rework Rate. — <a href="https://getdx.com/blog/ai-amplifies-bad-practices-real-gains-come-from-focusing-aiefforts-on-systems-and-success-depends-on-strong-change-management/" target="_blank" class="il">DX Blog via DORA 2025</a>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">Reasoning Depth by Tool — <a href="https://www.builder.io/blog/cursor-vs-claude-code" target="_blank" class="il" style="font-weight:400;font-size:12px">Source: Builder.io 2026</a></div>
+          <div id="reasoning-bars"></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:4px">What NOT to Measure</div>
+          <div class="card-subtitle" style="margin-bottom:12px">These metrics are misleading with AI tools</div>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:7px">
+            <li style="display:flex;align-items:flex-start;gap:8px"><span style="color:var(--red);font-weight:700">✗</span><span style="font-size:12px;color:var(--text2)"><strong style="color:var(--text)">Lines of Code</strong> — AI generates verbose code trivially</span></li>
+            <li style="display:flex;align-items:flex-start;gap:8px"><span style="color:var(--red);font-weight:700">✗</span><span style="font-size:12px;color:var(--text2)"><strong style="color:var(--text)">Number of PRs</strong> — AI inflates PR count without improving outcomes</span></li>
+            <li style="display:flex;align-items:flex-start;gap:8px"><span style="color:var(--red);font-weight:700">✗</span><span style="font-size:12px;color:var(--text2)"><strong style="color:var(--text)">Commit Frequency</strong> — Same issue as PR count</span></li>
+            <li style="display:flex;align-items:flex-start;gap:8px"><span style="color:var(--red);font-weight:700">✗</span><span style="font-size:12px;color:var(--text2)"><strong style="color:var(--text)">Acceptance Rate alone</strong> — High acceptance can mean low review standards</span></li>
+            <li style="display:flex;align-items:flex-start;gap:8px"><span style="color:var(--red);font-weight:700">✗</span><span style="font-size:12px;color:var(--text2)"><strong style="color:var(--text)">Self-reported time savings</strong> — Developers overestimate by 40–50%</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title" style="margin-bottom:14px"><a href="https://dora.dev/research/2025/dora-report/" target="_blank" class="il">DORA Metrics</a> — 2025 Updated Framework</div>
+        <table class="metric-table">
+          <thead>
+            <tr><th>Metric</th><th>What It Measures</th><th>AI Signal to Watch</th><th>Priority</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><div class="metric-name">Deployment Frequency</div></td><td style="font-size:12px;color:var(--text2)">How often code ships to production</td><td style="font-size:12px;color:var(--text2)">AI accelerates PRs — may inflate without quality</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+            <tr><td><div class="metric-name">Lead Time for Changes</div></td><td style="font-size:12px;color:var(--text2)">Time from commit to production</td><td style="font-size:12px;color:var(--text2)">AI reduces impl time; review time may increase</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+            <tr><td><div class="metric-name">Mean Time to Restore</div></td><td style="font-size:12px;color:var(--text2)">How fast incidents are resolved</td><td style="font-size:12px;color:var(--text2)">AI-assisted runbooks can reduce MTTR 30–50%</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+            <tr><td><div class="metric-name">Change Failure Rate</div></td><td style="font-size:12px;color:var(--text2)">% of deployments causing incidents</td><td style="font-size:12px;color:var(--text2)">Critical: AI code can hide bugs that appear post-deploy</td><td><span class="badge badge-red">Critical</span></td></tr>
+            <tr><td><div class="metric-name">Rework Rate ★ NEW</div></td><td style="font-size:12px;color:var(--text2)">How often unplanned fixes go to production</td><td style="font-size:12px;color:var(--text2)">Primary signal for AI-introduced technical debt</td><td><span class="badge badge-red">Critical</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title" style="margin-bottom:14px">AI-Specific Metrics (New 2025–2026) — <a href="https://zylos.ai/research/2026-02-07-developer-productivity-metrics" target="_blank" class="il" style="font-weight:400;font-size:12px">Source: Zylos 2026</a></div>
+        <table class="metric-table">
+          <thead>
+            <tr><th>Metric</th><th>Definition</th><th>Target / Signal</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><div class="metric-name">AI Suggestion Acceptance Rate</div></td><td style="font-size:12px;color:var(--text2)">% of AI suggestions accepted by developers</td><td><span class="badge badge-green">&gt;30% = useful</span></td></tr>
+            <tr><td><div class="metric-name">AI Code Retention Rate</div></td><td style="font-size:12px;color:var(--text2)">% of AI code still in codebase after 30/90 days</td><td style="font-size:12px;color:var(--text2)">Low retention = low quality output</td></tr>
+            <tr><td><div class="metric-name">AI Rework Rate</div></td><td style="font-size:12px;color:var(--text2)">% of AI-generated code rewritten within 7 days</td><td style="font-size:12px;color:var(--text2)">High rework = poor generation quality</td></tr>
+            <tr><td><div class="metric-name">Token Efficiency</div></td><td style="font-size:12px;color:var(--text2)">Cost per accepted suggestion or per PR</td><td style="font-size:12px;color:var(--text2)">Controls AI tool spend at scale</td></tr>
+            <tr><td><div class="metric-name">Security Vulnerability Rate</div></td><td style="font-size:12px;color:var(--text2)">Security issues per code review cycle</td><td style="font-size:12px;color:var(--text2)">AI can introduce security anti-patterns</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">3-Phase Measurement Rollout</div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-phase">Months 1–3</div>
+            <div class="timeline-title">Phase 1: Establish Baselines</div>
+            <ul class="timeline-items">
+              <li>Instrument DORA metrics BEFORE AI adoption — no baseline = no ROI proof</li>
+              <li>Run developer satisfaction surveys (SPACE Satisfaction dimension)</li>
+              <li>Track PR cycle time and deployment frequency</li>
+            </ul>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot" style="background:var(--accent2)"></div>
+            <div class="timeline-phase" style="color:var(--accent2)">Months 3–6</div>
+            <div class="timeline-title">Phase 2: Add AI-Specific Tracking</div>
+            <ul class="timeline-items">
+              <li>Add AI suggestion acceptance rate (from tool APIs)</li>
+              <li>Track Change Failure Rate and Rework Rate changes vs. baseline</li>
+              <li>Survey developers monthly on trust in AI output quality</li>
+            </ul>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot" style="background:var(--accent4)"></div>
+            <div class="timeline-phase" style="color:var(--accent4)">Months 6+</div>
+            <div class="timeline-title">Phase 3: Outcome Focus</div>
+            <ul class="timeline-items">
+              <li>Add business outcome metrics (feature adoption, customer defect reports)</li>
+              <li>Track AI Code Retention Rate at 30 and 90 days</li>
+              <li>Instrument security scanning specifically on AI-generated code</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="sources-footer">
+        <div class="sources-footer-title">Sources for this page</div>
+        <div class="sources-list">
+          <a class="source-chip" href="https://dora.dev/research/2025/dora-report/" target="_blank"><span class="source-chip-dot"></span>DORA State of AI-assisted Dev 2025</a>
+          <a class="source-chip" href="https://zylos.ai/research/2026-02-07-developer-productivity-metrics" target="_blank"><span class="source-chip-dot"></span>Zylos — Dev Productivity Metrics 2026</a>
+          <a class="source-chip" href="https://linearb.io/blog/space-framework" target="_blank"><span class="source-chip-dot"></span>LinearB — SPACE Framework</a>
+          <a class="source-chip" href="https://plandek.com/blog/how-to-measure-dora-metrics-in-the-age-of-ai-2026/" target="_blank"><span class="source-chip-dot"></span>Plandek — DORA in the Age of AI 2026</a>
+          <a class="source-chip" href="https://www.faros.ai/blog/key-takeaways-from-the-dora-report-2025" target="_blank"><span class="source-chip-dot"></span>Faros AI — DORA 2025 Key Takeaways</a>
+          <a class="source-chip" href="https://www.hivel.ai/blog/dora-metrics-in-ai-coding" target="_blank"><span class="source-chip-dot"></span>Hivel AI — DORA in AI Coding Era</a>
+          <a class="source-chip" href="https://jellyfish.co/library/developer-productivity/" target="_blank"><span class="source-chip-dot"></span>Jellyfish — Modern Developer Productivity</a>
+          <a class="source-chip" href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/" target="_blank"><span class="source-chip-dot"></span>METR RCT 2025 — AI productivity study</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RESEARCH ── -->
+    <div class="page" id="page-research">
+      <div class="page-header">
+        <h2>Latest Research &amp; Citations</h2>
+        <p>Primary sources powering this knowledge base — academic studies, industry reports, and practitioner analyses</p>
+      </div>
+
+      <!-- Filter tabs -->
+      <div class="role-tabs" style="margin-bottom:24px">
+        <div class="role-tab active" onclick="filterResearch('all', this)">All Sources</div>
+        <div class="role-tab" onclick="filterResearch('academic', this)">Academic</div>
+        <div class="role-tab" onclick="filterResearch('industry', this)">Industry Reports</div>
+        <div class="role-tab" onclick="filterResearch('tools', this)">Tool Comparisons</div>
+        <div class="role-tab" onclick="filterResearch('measurement', this)">Measurement</div>
+        <div class="role-tab" onclick="filterResearch('practices', this)">Best Practices</div>
+        <div class="role-tab" onclick="filterResearch('agents', this)">Agent Architecture</div>
+        <div class="role-tab" onclick="filterResearch('companies', this)">Company Case Studies</div>
+        <div class="role-tab" onclick="filterResearch('deepdive', this)">Deep Dives</div>
+      </div>
+
+      <!-- Key Findings callout -->
+      <div class="card" style="margin-bottom:24px;background:linear-gradient(135deg,rgba(108,99,255,0.1),rgba(0,212,170,0.05));border-color:rgba(108,99,255,0.25)">
+        <div class="card-title" style="margin-bottom:14px">Key Findings from Latest Research</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:14px 16px;border-left:3px solid #6c63ff">
+            <div style="font-size:11px;font-weight:700;color:#6c63ff;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">METR RCT 2025 → 2026</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6">AI tools initially <strong style="color:var(--red)">slowed</strong> experienced developers by 19%, despite developers believing they were 24% faster. By early 2026, same cohort shows an <strong style="color:var(--green)">18% speedup</strong> — measuring rapid tool improvement.</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:14px 16px;border-left:3px solid #00d4aa">
+            <div style="font-size:11px;font-weight:700;color:#00d4aa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Anthropic Agentic Trends 2026</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6">Agents now complete <strong style="color:var(--text)">20 autonomous actions</strong> before needing human input (doubled in 6 months). Engineers use AI in <strong style="color:var(--text)">~60% of work</strong> but fully delegate only 0–20% of tasks.</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:14px 16px;border-left:3px solid #ffd166">
+            <div style="font-size:11px;font-weight:700;color:#ffd166;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">JetBrains Dev Ecosystem 2025</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6"><strong style="color:var(--text)">85%</strong> of developers now use AI tools; <strong style="color:var(--text)">62%</strong> rely on an AI coding assistant. Yet <strong style="color:var(--text)">75%</strong> of organizations see no measurable performance gains at the org level.</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:14px 16px;border-left:3px solid #ff6b6b">
+            <div style="font-size:11px;font-weight:700;color:#ff6b6b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">DORA Report 2025</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6"><strong style="color:var(--text)">Rework Rate</strong> added as the 5th DORA metric, specifically targeting AI-introduced technical debt. AI accelerates PR generation but shifts the bottleneck to code review.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Academic -->
+      <div class="research-group" data-category="academic">
+        <div style="margin-bottom:10px;font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Academic Research</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">AI Tools Slowed Experienced Developers (Then Sped Them Up)</div>
+                <div class="citation-meta">METR · Randomized Controlled Trial · July 2025</div>
+              </div>
+              <span class="badge badge-purple">Academic</span>
+            </div>
+            <div class="citation-finding">In a rigorous RCT, experienced open-source developers using AI tools completed tasks 19% <em>slower</em> — despite believing they were 24% faster. The self-perception gap highlights why self-reported productivity data is unreliable.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/" target="_blank">metr.org → early-2025-ai-experienced-os-dev-study</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">METR Follow-up: 18% Speedup by Early 2026</div>
+                <div class="citation-meta">METR · Follow-up Study · February 2026</div>
+              </div>
+              <span class="badge badge-purple">Academic</span>
+            </div>
+            <div class="citation-finding">The same cohort from the 2025 RCT now shows an 18% speedup with AI tools. Demonstrates the rapid pace of tool improvement and developer adaptation — a 37-percentage-point swing in under a year.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://metr.org/blog/2026-02-24-uplift-update/" target="_blank">metr.org → 2026-02-24-uplift-update</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">GitHub Copilot Developer Study</div>
+                <div class="citation-meta">arXiv · Peer-reviewed · 2023</div>
+              </div>
+              <span class="badge badge-purple">Academic</span>
+            </div>
+            <div class="citation-finding">Copilot users were 53.2% more likely to pass all unit tests on a controlled task. Produced 13.6% fewer errors per line of code. One of the earliest rigorous controlled evaluations of AI coding assistance.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://arxiv.org/abs/2302.06590" target="_blank">arxiv.org → abs/2302.06590</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">From Developer Pairs to AI Copilots</div>
+                <div class="citation-meta">arXiv · 2025</div>
+              </div>
+              <span class="badge badge-purple">Academic</span>
+            </div>
+            <div class="citation-finding">Systematic analysis of how AI pair programming has evolved from autocomplete to agentic collaboration. Examines the shift in developer role from code writer to outcome orchestrator.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://arxiv.org/pdf/2506.04785" target="_blank">arxiv.org → 2506.04785</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Generative AI in Pair Programming (Master's Thesis)</div>
+                <div class="citation-meta">Lund University · 2025</div>
+              </div>
+              <span class="badge badge-purple">Academic</span>
+            </div>
+            <div class="citation-finding">Explores how generative AI changes the pair programming dynamic. Finds that AI as "driver" performs best with an experienced human "navigator" providing context and constraints — reinforcing the supervised collaboration model.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://lup.lub.lu.se/student-papers/record/9211585/file/9211586.pdf" target="_blank">lup.lub.lu.se → Lund University Thesis</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Industry Reports -->
+      <div class="research-group" data-category="industry">
+        <div style="margin-bottom:10px;font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Industry Reports</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">2026 Agentic Coding Trends Report</div>
+                <div class="citation-meta">Anthropic · March 2026</div>
+              </div>
+              <span class="badge badge-green">Industry</span>
+            </div>
+            <div class="citation-finding">8 major shifts reshaping software development in 2026. Agents now complete 20 autonomous actions before human input (doubled in 6 months). ~60% of engineering work involves AI. Multi-agent systems report 3x faster completion and 60% better accuracy vs. single-agent. 1,445% surge in enterprise multi-agent inquiries from Q1 2024 to Q2 2025.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://resources.anthropic.com/2026-agentic-coding-trends-report" target="_blank">resources.anthropic.com → 2026-agentic-coding-trends-report</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">State of AI-assisted Software Development 2025</div>
+                <div class="citation-meta">DORA (Google) · 2025</div>
+              </div>
+              <span class="badge badge-green">Industry</span>
+            </div>
+            <div class="citation-finding">Rework Rate added as the 5th DORA metric, specifically designed to track AI-introduced technical debt. Key finding: velocity metrics inflate with AI adoption, but Change Failure Rate reveals whether quality is being maintained. Lead time shifts — implementation gets faster, review becomes the new bottleneck.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://dora.dev/research/2025/dora-report/" target="_blank">dora.dev → research/2025/dora-report</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">State of Developer Ecosystem 2025</div>
+                <div class="citation-meta">JetBrains · October 2025</div>
+              </div>
+              <span class="badge badge-green">Industry</span>
+            </div>
+            <div class="citation-finding">85% of developers now use AI tools; 62% rely on an AI coding assistant. Claude Code holds 46% "most loved" rating — a reversal from Cursor's prior lead. Despite high individual adoption, 75% of organizations report no measurable performance gains, revealing an implementation gap.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://blog.jetbrains.com/research/2025/10/state-of-developer-ecosystem-2025/" target="_blank">blog.jetbrains.com → state-of-developer-ecosystem-2025</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">AI Coding Assistant ROI Study</div>
+                <div class="citation-meta">Index.dev · 2025</div>
+              </div>
+              <span class="badge badge-green">Industry</span>
+            </div>
+            <div class="citation-finding">Teams using AI report 21% more tasks completed and 98% more PRs merged. Yet most organizations see flat organizational delivery metrics. Quantifies the individual-vs-org productivity gap and highlights that metric selection is the primary failure mode in AI productivity measurement.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://www.index.dev/blog/ai-coding-assistants-roi-productivity" target="_blank">index.dev → ai-coding-assistants-roi-productivity</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Tool Comparisons -->
+      <div class="research-group" data-category="tools">
+        <div style="margin-bottom:10px;font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Tool Comparisons</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Claude Code vs Cursor: Complete Comparison 2026</div>
+                <div class="citation-meta">Builder.io · 2026</div>
+              </div>
+              <span class="badge badge-blue">Tool Analysis</span>
+            </div>
+            <div class="citation-finding">Head-to-head evaluation: Claude Code uses 5.5x fewer tokens than Cursor for identical tasks. Claude Code scores higher on code quality and security. Cursor wins on IDE familiarity and daily shipping velocity. Recommends using both tools in parallel for maximum output.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://www.builder.io/blog/cursor-vs-claude-code" target="_blank">builder.io → cursor-vs-claude-code</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">AI Coding Agents Full Comparison (6 Tools)</div>
+                <div class="citation-meta">Lushbinary · 2026</div>
+              </div>
+              <span class="badge badge-blue">Tool Analysis</span>
+            </div>
+            <div class="citation-finding">Comprehensive benchmark: Claude Code vs Codex vs Cursor vs Kiro vs Copilot vs Windsurf. Claude Code leads on reasoning depth and security. Windsurf leads on price/feature ratio. GitHub Copilot leads on IDE coverage. Enterprise teams increasingly standardize on Copilot for compliance, while individual engineers prefer Claude Code or Cursor.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://lushbinary.com/blog/ai-coding-agents-comparison-cursor-windsurf-claude-copilot-kiro-2026/" target="_blank">lushbinary.com → ai-coding-agents-comparison-2026</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Built the Same App 5 Ways</div>
+                <div class="citation-meta">DEV.to · 2026</div>
+              </div>
+              <span class="badge badge-blue">Tool Analysis</span>
+            </div>
+            <div class="citation-finding">Practical head-to-head: Cursor vs Claude Code vs Windsurf vs Replit Agent vs GitHub Copilot building identical applications. Reveals real-world differences in output quality, context retention, and ability to handle edge cases — often diverging significantly from benchmark rankings.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://dev.to/paulthedev/i-built-the-same-app-5-ways-cursor-vs-claude-code-vs-windsurf-vs-replit-agent-vs-github-copilot-50m2" target="_blank">dev.to → i-built-the-same-app-5-ways</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">AI Coding Agents Benchmark: Claude, Cursor, OpenAI, Gemini</div>
+                <div class="citation-meta">Render · 2025/2026</div>
+              </div>
+              <span class="badge badge-blue">Tool Analysis</span>
+            </div>
+            <div class="citation-finding">Multi-model benchmark across real deployment tasks on Render's infrastructure. Evaluates agents on code correctness, error recovery, and ability to follow infrastructure-specific conventions. Claude leads on correctness; Gemini shows strong infrastructure-specific performance.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://render.com/blog/ai-coding-agents-benchmark" target="_blank">render.com → ai-coding-agents-benchmark</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Measurement -->
+      <div class="research-group" data-category="measurement">
+        <div style="margin-bottom:10px;font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Productivity Measurement</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">DORA Report 2025: Key Takeaways for AI-Era Teams</div>
+                <div class="citation-meta">Faros AI · 2025</div>
+              </div>
+              <span class="badge badge-yellow">Measurement</span>
+            </div>
+            <div class="citation-finding">Analysis of DORA 2025 findings with an AI lens. Key insight: Deployment Frequency increases with AI but is only meaningful if Change Failure Rate holds or improves. The new Rework Rate metric is the primary signal for AI quality problems in production.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://www.faros.ai/blog/key-takeaways-from-the-dora-report-2025" target="_blank">faros.ai → key-takeaways-from-the-dora-report-2025</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Developer Productivity Metrics Beyond DORA (2026)</div>
+                <div class="citation-meta">Zylos Research · February 2026</div>
+              </div>
+              <span class="badge badge-yellow">Measurement</span>
+            </div>
+            <div class="citation-finding">Argues DORA alone is insufficient for AI-era measurement. Introduces AI-specific metrics: Suggestion Acceptance Rate, AI Code Retention Rate (% still in codebase after 90 days), and AI Rework Rate. Recommends a phased 3-layer measurement stack: DORA → SPACE → AI-specific.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://zylos.ai/research/2026-02-07-developer-productivity-metrics" target="_blank">zylos.ai → 2026-02-07-developer-productivity-metrics</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">SPACE Framework for Developer Productivity</div>
+                <div class="citation-meta">LinearB · 2025</div>
+              </div>
+              <span class="badge badge-yellow">Measurement</span>
+            </div>
+            <div class="citation-finding">Comprehensive guide to the SPACE framework (Satisfaction, Performance, Activity, Communication, Efficiency). Highlights that Activity metrics — the easiest to measure — are the most misleading with AI tools. Recommends Satisfaction and Efficiency as the most actionable dimensions for AI adoption tracking.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://linearb.io/blog/space-framework" target="_blank">linearb.io → space-framework</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">DORA Metrics in the Age of AI (2026)</div>
+                <div class="citation-meta">Plandek · 2026</div>
+              </div>
+              <span class="badge badge-yellow">Measurement</span>
+            </div>
+            <div class="citation-finding">Practical guide to applying DORA in AI-assisted environments. Key recommendation: decompose Lead Time into "implementation time" vs. "review time" separately — AI radically changes the former but often increases the latter. Provides tooling recommendations for each DORA metric in the AI era.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://plandek.com/blog/how-to-measure-dora-metrics-in-the-age-of-ai-2026/" target="_blank">plandek.com → dora-metrics-in-the-age-of-ai-2026</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Best Practices -->
+      <div class="research-group" data-category="practices">
+        <div style="margin-bottom:10px;font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Best Practices & Practitioner Insights</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">My LLM Coding Workflow Going Into 2026</div>
+                <div class="citation-meta">Addy Osmani (Google Chrome) · Medium · 2025</div>
+              </div>
+              <span class="badge badge-gray">Practitioner</span>
+            </div>
+            <div class="citation-finding">Senior engineer workflow guide from Addy Osmani (Engineering Manager, Google Chrome). Advocates for the "architect-delegate-review" pattern. Key advice: use AI for 70% of implementation, but spend disproportionate time on architecture upfront and review afterward. Never skip the review phase.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://medium.com/@addyosmani/my-llm-coding-workflow-going-into-2026-52fe1681325e" target="_blank">medium.com → my-llm-coding-workflow-going-into-2026</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">The Reality of AI-Assisted Software Engineering</div>
+                <div class="citation-meta">Addy Osmani · Substack · 2025</div>
+              </div>
+              <span class="badge badge-gray">Practitioner</span>
+            </div>
+            <div class="citation-finding">Honest assessment of AI productivity from a practitioner perspective. Identifies the "confidence gap" — AI-generated code looks correct and passes tests but contains subtle semantic errors invisible to automated checks. Recommends treating AI code like a junior developer's PR: always review, never rubber-stamp.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://addyo.substack.com/p/the-reality-of-ai-assisted-software" target="_blank">addyo.substack.com → the-reality-of-ai-assisted-software</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">AI Engineering Trends 2025: Agents, MCP, and Vibe Coding</div>
+                <div class="citation-meta">The New Stack · 2025</div>
+              </div>
+              <span class="badge badge-gray">Practitioner</span>
+            </div>
+            <div class="citation-finding">Overview of the three major 2025 trends: agentic coding becoming mainstream, Model Context Protocol (MCP) enabling tool integration, and "vibe coding" emerging as a new developer mode. Argues MCP is the most underrated development — it standardizes how agents connect to external systems.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://thenewstack.io/ai-engineering-trends-in-2025-agents-mcp-and-vibe-coding/" target="_blank">thenewstack.io → ai-engineering-trends-2025</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Engineering Leader's Guide to AI Tools 2026</div>
+                <div class="citation-meta">Cortex · 2026</div>
+              </div>
+              <span class="badge badge-gray">Practitioner</span>
+            </div>
+            <div class="citation-finding">Leadership-level guide covering tool selection, rollout strategy, and measurement. Key recommendation: start with 2–3 high-ROI use cases (PR automation, test generation, documentation) before deploying agentic workflows. Emphasizes that standardizing on a single tool across a team yields better results than letting developers self-select freely.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://www.cortex.io/post/the-engineering-leaders-guide-to-ai-tools-for-developers-in-2026" target="_blank">cortex.io → engineering-leaders-guide-ai-tools-2026</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Agent Architecture -->
+      <div class="research-group" data-category="agents">
+        <div style="margin-bottom:10px;font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Agent Architecture</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">AI Agent Design Patterns</div>
+                <div class="citation-meta">Microsoft Learn / Azure · 2025</div>
+              </div>
+              <span class="badge badge-red">Architecture</span>
+            </div>
+            <div class="citation-finding">Comprehensive catalog of agent design patterns: Orchestrator + Subagents, Sequential Pipeline, Concurrent Exploration, and Supervisor-Critic Loop. Provides guidance on when to use each pattern based on task complexity, failure cost, and required autonomy level.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns" target="_blank">learn.microsoft.com → ai-agent-design-patterns</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">AI Agent Orchestration Frameworks Compared</div>
+                <div class="citation-meta">n8n Blog · 2025</div>
+              </div>
+              <span class="badge badge-red">Architecture</span>
+            </div>
+            <div class="citation-finding">Side-by-side comparison of LangGraph, CrewAI, PydanticAI, and native frameworks. LangGraph wins on production reliability and control; CrewAI wins on speed-to-build for business workflows; PydanticAI wins on type safety. Recommends starting with CrewAI and migrating to LangGraph when reliability requirements increase.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://blog.n8n.io/ai-agent-orchestration-frameworks/" target="_blank">blog.n8n.io → ai-agent-orchestration-frameworks</a>
+            </div>
+          </div>
+
+          <div class="citation-card">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Claude Subagents: Multi-Agent Systems Guide</div>
+                <div class="citation-meta">Cursor IDE Blog · 2025</div>
+              </div>
+              <span class="badge badge-red">Architecture</span>
+            </div>
+            <div class="citation-finding">Practical guide to building multi-agent systems with Claude as the orchestrator. Covers spawning parallel subagents, defining input/output contracts, setting autonomy budgets, and monitoring agent spend. Includes real-world examples of PR review and test generation pipelines.</div>
+            <div class="citation-footer">
+              <a class="citation-link" href="https://www.cursor-ide.com/blog/claude-subagents" target="_blank">cursor-ide.com → claude-subagents</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Company Case Studies -->
+      <div class="research-group" data-category="companies">
+        <div style="margin-bottom:10px;font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Company Case Studies</div>
+
+        <!-- Summary stats -->
+        <div class="grid-4" style="margin-bottom:20px">
+          <div class="card stat" style="padding:16px">
+            <div class="stat-value" style="color:#6c63ff;font-size:22px">1,300</div>
+            <div class="stat-label">AI PRs/week at Stripe</div>
+          </div>
+          <div class="card stat" style="padding:16px">
+            <div class="stat-value" style="color:#00d4aa;font-size:22px">50%</div>
+            <div class="stat-label">of Google code is AI-assisted</div>
+          </div>
+          <div class="card stat" style="padding:16px">
+            <div class="stat-value" style="color:#ffd166;font-size:22px">$260M</div>
+            <div class="stat-label">Amazon saved internally (2024)</div>
+          </div>
+          <div class="card stat" style="padding:16px">
+            <div class="stat-value" style="color:#ff6b6b;font-size:22px">6x</div>
+            <div class="stat-label">AI cost growth at Uber since 2024</div>
+          </div>
+        </div>
+
+        <!-- Company cards -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+
+          <!-- Stripe -->
+          <div class="citation-card" style="border-left:3px solid #6c63ff">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Stripe — Minions: 1,300 AI PRs/Week</div>
+                <div class="citation-meta">Tools: Minions (custom agent) · Cursor · Claude Code · Toolshed MCP · 2026</div>
+              </div>
+              <span class="badge badge-purple">Case Study</span>
+            </div>
+            <div class="citation-finding">
+              Stripe's proprietary autonomous coding agents generate <strong style="color:var(--text)">1,300+ pull requests per week</strong> — zero human-written code — and every single one is reviewed by a human engineer before merge. Key innovation: the <strong style="color:var(--text)">Blueprint</strong> pattern interleaves deterministic state machines with AI agent loops, preventing unrecoverable mid-task failures. The <strong style="color:var(--text)">"two CI shots" rule</strong>: agents get two attempts to pass CI; on the third failure, the task escalates to a human.
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+              <span class="badge badge-green">Decompose tasks into retryable steps</span>
+              <span class="badge badge-yellow">Shared rule files across all AI tools</span>
+              <span class="badge badge-red">100% human review — non-negotiable</span>
+            </div>
+            <div class="citation-footer" style="justify-content:flex-start;gap:8px">
+              <a class="citation-link" href="https://stripe.dev/blog/minions-stripes-one-shot-end-to-end-coding-agents" target="_blank">stripe.dev → minions part 1</a>
+              <a class="citation-link" href="https://stripe.dev/blog/minions-stripes-one-shot-end-to-end-coding-agents-part-2" target="_blank">part 2 (Feb 2026)</a>
+            </div>
+          </div>
+
+          <!-- Uber -->
+          <div class="citation-card" style="border-left:3px solid #00d4aa">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Uber — uReview Outperforms Human Reviewers</div>
+                <div class="citation-meta">Tools: uReview (internal) · Cursor · Claude Code · Agent Builder · 2024–2025</div>
+              </div>
+              <span class="badge badge-green">Case Study</span>
+            </div>
+            <div class="citation-finding">
+              <strong style="color:var(--text)">92%</strong> of Uber developers use AI agents monthly. <strong style="color:var(--text)">65–72%</strong> of code is AI-generated inside IDEs. Their internal uReview system covers <strong style="color:var(--text)">>90% of ~65,000 weekly diffs</strong> across 6 monorepos in a median of 4 minutes — and achieves a <strong style="color:var(--text)">65% comment fix rate vs. 51% for human reviewers</strong>. Key lesson: deploying AI review as CI infrastructure (not an opt-in tool) drove adoption without mandate debates.
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+              <span class="badge badge-green">AI review as CI service, not opt-in</span>
+              <span class="badge badge-yellow">~39 dev-years saved/yr on review alone</span>
+              <span class="badge badge-red">⚠ AI costs up 6x since 2024</span>
+            </div>
+            <div class="citation-footer" style="justify-content:flex-start;gap:8px">
+              <a class="citation-link" href="https://www.uber.com/blog/ureview/" target="_blank">uber.com → ureview</a>
+              <a class="citation-link" href="https://newsletter.pragmaticengineer.com/p/how-uber-uses-ai-for-development" target="_blank">Pragmatic Engineer</a>
+            </div>
+          </div>
+
+          <!-- Airbnb -->
+          <div class="citation-card" style="border-left:3px solid #ffd166">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Airbnb — 18-Month Migration in 6 Weeks</div>
+                <div class="citation-meta">Tools: LLM migration pipeline (GPT-4 class) · One Chat (internal) · AirDev · 2024</div>
+              </div>
+              <span class="badge badge-yellow">Case Study</span>
+            </div>
+            <div class="citation-finding">
+              Airbnb used an LLM-powered pipeline to migrate <strong style="color:var(--text)">3,500 React test files</strong> from Enzyme to React Testing Library — a project estimated at 18 months — in <strong style="color:var(--text)">6 weeks with 6 engineers</strong>, with a <strong style="color:var(--text)">97% automated success rate</strong>. Architecture: each file's conversion was a discrete, independently retryable step that could run in parallel. Failed steps re-invoked the LLM with contextual failure information. The remaining 3% were finished manually using AI output as a starting point.
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+              <span class="badge badge-green">Per-file parallelization = dramatic speedup</span>
+              <span class="badge badge-yellow">Retry-with-context for failure recovery</span>
+              <span class="badge badge-blue">Hackathon prototype → production pipeline</span>
+            </div>
+            <div class="citation-footer" style="justify-content:flex-start;gap:8px">
+              <a class="citation-link" href="https://medium.com/airbnb-engineering/accelerating-large-scale-test-migration-with-llms-9565c208023b" target="_blank">airbnb-engineering → test-migration</a>
+            </div>
+          </div>
+
+          <!-- Google -->
+          <div class="citation-card" style="border-left:3px solid #ff6b6b">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Google — 50% of Code Characters Now AI-Assisted</div>
+                <div class="citation-meta">Tools: Internal AI completion · Smart Paste · AI code review · Gemini agents · 2025</div>
+              </div>
+              <span class="badge badge-red">Case Study</span>
+            </div>
+            <div class="citation-finding">
+              Google crossed the milestone where <strong style="color:var(--text)">50% of all code characters</strong> are AI-assisted. A <strong style="color:var(--text)">37% suggestion acceptance rate</strong>, and <strong style="color:var(--text)">>8% of code review comments</strong> are addressed with AI assistance. Internal RCT showed ~21% faster task completion. Critical finding: combined AI tooling (completion + review + build repair) shows <strong style="color:var(--text)">compounding gains</strong> — no single tool delivers the full benefit. Org-level delivery metrics did not improve proportionally, consistent with the DORA paradox.
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+              <span class="badge badge-green">Stack multiple AI tools for compounding gains</span>
+              <span class="badge badge-yellow">Shift: writing → reviewing and designing</span>
+            </div>
+            <div class="citation-footer" style="justify-content:flex-start;gap:8px">
+              <a class="citation-link" href="https://research.google/blog/ai-in-software-engineering-at-google-progress-and-the-path-ahead/" target="_blank">research.google → ai-in-software-engineering</a>
+            </div>
+          </div>
+
+          <!-- Shopify -->
+          <div class="citation-card" style="border-left:3px solid #6c8fff">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Shopify — Unlimited AI Budget, Dev Happiness as Primary Metric</div>
+                <div class="citation-meta">Tools: GitHub Copilot · Claude · Roast (open-source) · OpenAI · 2024–2025</div>
+              </div>
+              <span class="badge badge-blue">Case Study</span>
+            </div>
+            <div class="citation-finding">
+              Shopify removed all bureaucratic friction: engineers can spend <strong style="color:var(--text)">$1,000+/month on AI tools without approval</strong>. The intern program grew <strong style="color:var(--text)">40x</strong> (25 → 1,000), treated as AI-augmented capacity. Leadership framed AI as a professional requirement: demonstrate AI use before requesting additional headcount. They track <strong style="color:var(--text)">developer happiness</strong> as their primary metric — not PR velocity or DORA. Open-sourced <strong style="color:var(--text)">Roast</strong>: a YAML-based framework for structured, multi-step AI workflows.
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+              <span class="badge badge-green">Remove friction before adding mandates</span>
+              <span class="badge badge-yellow">Happiness score beats DORA for AI rollouts</span>
+              <span class="badge badge-blue">Open-source: Roast workflow framework</span>
+            </div>
+            <div class="citation-footer" style="justify-content:flex-start;gap:8px">
+              <a class="citation-link" href="https://newsletter.pragmaticengineer.com/p/how-ai-is-changing-software-engineering" target="_blank">Pragmatic Engineer → Shopify</a>
+              <a class="citation-link" href="https://shopify.engineering/introducing-roast" target="_blank">shopify.engineering → roast</a>
+            </div>
+          </div>
+
+          <!-- Amazon -->
+          <div class="citation-card" style="border-left:3px solid #9a9db8">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Amazon — 4,500 Dev-Years Saved, $260M in 2024</div>
+                <div class="citation-meta">Tools: Amazon Q Developer (IDE · CLI · code review · security) · 2024</div>
+              </div>
+              <span class="badge badge-gray">Case Study</span>
+            </div>
+            <div class="citation-finding">
+              Amazon's internal deployment of Q Developer saved a self-reported <strong style="color:var(--text)">4,500 developer-years</strong> and <strong style="color:var(--text)">$260 million</strong> in 2024. External customer pilots showed <strong style="color:var(--text)">40% average throughput increase</strong> and <strong style="color:var(--text)">30% fewer code defects</strong>. Q Developer's SWE-bench score improved from 25.6% to <strong style="color:var(--text)">38.8%</strong> (51% more tasks resolved) in a single year. Bundling code generation with security scanning and test generation as a single tool drove higher adoption than point solutions.
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+              <span class="badge badge-green">Bundle generation + security + tests together</span>
+              <span class="badge badge-yellow">Dog-food internally to improve the product</span>
+            </div>
+            <div class="citation-footer" style="justify-content:flex-start;gap:8px">
+              <a class="citation-link" href="https://press.aboutamazon.com/2024/12/amazon-q-developer-reimagines-how-developers-build-and-operate-software-with-generative-ai" target="_blank">press.aboutamazon.com → Q Developer</a>
+            </div>
+          </div>
+
+          <!-- Duolingo -->
+          <div class="citation-card" style="border-left:3px solid #00d4aa">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Duolingo — 4–5x Content Output, 10–20% Code Savings</div>
+                <div class="citation-meta">Tools: GitHub Copilot · GenAI content pipeline · AI test automation · 2025</div>
+              </div>
+              <span class="badge badge-green">Case Study</span>
+            </div>
+            <div class="citation-finding">
+              Duolingo's AI-first mandate achieved <strong style="color:var(--text)">4–5x content output</strong> with the same headcount and doubled course offerings in under a year (vs. 12 years prior). Code-specific gains were more modest: <strong style="color:var(--text)">10–20% time savings</strong> on repetitive tasks. Key insight: Copilot's biggest impact was enabling engineers to work confidently in <strong style="color:var(--text)">unfamiliar codebases</strong>. No full-time layoffs — AI expanded capacity rather than replacing headcount.
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+              <span class="badge badge-green">AI-first without layoffs — framing matters</span>
+              <span class="badge badge-yellow">Content ROI &gt; code ROI at Duolingo's scale</span>
+            </div>
+            <div class="citation-footer" style="justify-content:flex-start;gap:8px">
+              <a class="citation-link" href="https://www.cnbc.com/2025/09/17/duolingo-ceo-how-ai-makes-my-employees-more-productive-without-layoffs.html" target="_blank">CNBC → Duolingo CEO (Sep 2025)</a>
+            </div>
+          </div>
+
+          <!-- Meta -->
+          <div class="citation-card" style="border-left:3px solid #6c63ff">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Meta — CodeCompose: Fine-Tuned on Internal Codebase</div>
+                <div class="citation-meta">Tools: CodeCompose (internal, InCoder-based, 6.7B params) · 9 languages · 16,000 devs · 2023–2024</div>
+              </div>
+              <span class="badge badge-purple">Case Study</span>
+            </div>
+            <div class="citation-finding">
+              Meta's internal CodeCompose reached <strong style="color:var(--text)">16,000 active developers</strong>, with <strong style="color:var(--text)">91.5% positive developer sentiment</strong>. Only <strong style="color:var(--text)">~8% of code</strong> came from AI suggestions, but the primary reported value was <strong style="color:var(--text)">faster API discovery</strong> and boilerplate reduction. Critical lesson: fine-tuning on Meta's internal codebase — not just using a general model — was the primary driver of high acceptance rates. Bi-directional InCoder architecture improved mid-function suggestion quality over left-to-right-only models.
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+              <span class="badge badge-green">Internal fine-tuning &gt; vendor model selection</span>
+              <span class="badge badge-yellow">Use both quant metrics + dev satisfaction surveys</span>
+            </div>
+            <div class="citation-footer" style="justify-content:flex-start;gap:8px">
+              <a class="citation-link" href="https://arxiv.org/abs/2305.12050" target="_blank">arxiv.org → 2305.12050 (Meta Research)</a>
+            </div>
+          </div>
+
+          <!-- Goldman Sachs -->
+          <div class="citation-card" style="border-left:3px solid #ff6b6b">
+            <div class="citation-header">
+              <div>
+                <div class="citation-title">Goldman Sachs — 30% Task Gains, No Economy-Wide Impact</div>
+                <div class="citation-meta">Tools: LLM Suite (140K employees) · AI coding agents (~12,000 devs) · 2024–2026</div>
+              </div>
+              <span class="badge badge-red">Case Study + Counter-Evidence</span>
+            </div>
+            <div class="citation-finding">
+              Goldman Sachs found <strong style="color:var(--text)">~30% productivity gains on specific, well-defined tasks</strong> — but their own March 2026 research found <strong style="color:var(--text)">"no meaningful relationship between AI and productivity at the economy-wide level."</strong> They plan to deploy thousands of autonomous AI coding agents alongside ~12,000 human developers with projected 3–4x gains. Key: 140,000-employee LLM Suite deployment built organizational AI literacy before technical adoption.
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+              <span class="badge badge-yellow">Broad AI literacy precedes engineering gains</span>
+              <span class="badge badge-red">Own research: no economy-wide productivity link</span>
+            </div>
+            <div class="citation-footer" style="justify-content:flex-start;gap:8px">
+              <a class="citation-link" href="https://fortune.com/2026/03/03/goldman-earnings-ai-anxiety-no-meaningful-impact-productivity-economy-30-percent-in-2-areas/" target="_blank">Fortune → Goldman AI productivity (Mar 2026)</a>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Cross-company lessons -->
+        <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(108,99,255,0.08),rgba(0,212,170,0.04));border-color:rgba(108,99,255,0.2)">
+          <div class="card-title" style="margin-bottom:16px">8 Key Lessons Across All Companies</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="width:28px;height:28px;border-radius:6px;background:rgba(108,99,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);flex-shrink:0;font-size:12px">1</div>
+              <div><span style="font-size:13px;font-weight:600">The Individual-to-Org Gap is Real.</span><span style="font-size:12px;color:var(--text2)"> Every cross-company study (DORA 2025, Goldman, Google) finds individual gains don't automatically translate to org delivery improvements. Coordination costs and review bottlenecks absorb the gains.</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="width:28px;height:28px;border-radius:6px;background:rgba(108,99,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);flex-shrink:0;font-size:12px">2</div>
+              <div><span style="font-size:13px;font-weight:600">Platform Engineering is a Prerequisite.</span><span style="font-size:12px;color:var(--text2)"> DORA 2025: 90% of high-performing orgs have an internal developer platform. Platform quality is the #1 predictor of AI value. Uber (Michelangelo), Stripe (Toolshed + Blueprints), and Airbnb (AirDev) built platforms before scaling AI.</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="width:28px;height:28px;border-radius:6px;background:rgba(108,99,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);flex-shrink:0;font-size:12px">3</div>
+              <div><span style="font-size:13px;font-weight:600">Human Review Remains Non-Negotiable.</span><span style="font-size:12px;color:var(--text2)"> Stripe ships 1,300 AI PRs/week and reviews every single one. This is the industry's clearest statement that automation volume does not eliminate the need for human oversight.</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="width:28px;height:28px;border-radius:6px;background:rgba(108,99,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);flex-shrink:0;font-size:12px">4</div>
+              <div><span style="font-size:13px;font-weight:600">Internal Context &gt; Model Selection.</span><span style="font-size:12px;color:var(--text2)"> Meta (fine-tuned CodeCompose), Uber (internal context layer with source + Slack + JIRA), and Stripe (Toolshed with 500 internal tools) all found internal grounding outperforms switching to a larger model.</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="width:28px;height:28px;border-radius:6px;background:rgba(108,99,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);flex-shrink:0;font-size:12px">5</div>
+              <div><span style="font-size:13px;font-weight:600">Decompose into Discrete, Retryable Steps.</span><span style="font-size:12px;color:var(--text2)"> Airbnb's migration pipeline, Shopify's Roast, and Stripe's Blueprints independently arrived at the same pattern. Break complex tasks into independently retryable steps with clear success criteria — this is the most transferable engineering pattern.</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="width:28px;height:28px;border-radius:6px;background:rgba(108,99,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);flex-shrink:0;font-size:12px">6</div>
+              <div><span style="font-size:13px;font-weight:600">Code Quality Requires Active Defense.</span><span style="font-size:12px;color:var(--text2)"> GitClear's 211M-line analysis: AI adoption correlates with +48% clone rate, −60% refactoring, +84% code churn. Pair AI generation with AI review (Uber's uReview, Stripe's human review mandate) to counteract drift.</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="width:28px;height:28px;border-radius:6px;background:rgba(108,99,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);flex-shrink:0;font-size:12px">7</div>
+              <div><span style="font-size:13px;font-weight:600">Token Costs Scale Faster Than Expected.</span><span style="font-size:12px;color:var(--text2)"> Uber: costs up 6x since 2024. No company anticipated this growth rate. Instrument AI API costs from day one — token cost governance is now a first-class engineering concern.</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="width:28px;height:28px;border-radius:6px;background:rgba(108,99,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);flex-shrink:0;font-size:12px">8</div>
+              <div><span style="font-size:13px;font-weight:600">Adoption Strategy &gt; Tool Choice.</span><span style="font-size:12px;color:var(--text2)"> Shopify: remove friction (no approval needed). Uber: make AI a CI service, not opt-in. Netflix: deliberate caution. The adoption strategy consistently proved more determinative of realized gains than the specific tool selected.</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Counter-evidence GitClear -->
+        <div class="citation-card" style="border-left:3px solid #ff6b6b;margin-bottom:20px">
+          <div class="citation-header">
+            <div>
+              <div class="citation-title">Counter-Evidence: GitClear — Code Quality Deteriorating at Scale</div>
+              <div class="citation-meta">GitClear · 211 million changed lines analyzed · Jan 2020–Dec 2024</div>
+            </div>
+            <span class="badge badge-red">Counter-Evidence</span>
+          </div>
+          <div class="citation-finding">
+            The most rigorous counter-evidence available. Analysis of 211M changed lines shows AI adoption correlating with significant quality degradation: code clone rate <strong style="color:var(--red)">+48%</strong>, duplicated code blocks <strong style="color:var(--red)">8x increase</strong>, refactoring share of changes <strong style="color:var(--red)">down from 25% to &lt;10%</strong>, and code churn <strong style="color:var(--red)">+84%</strong> (more revisions within 2 weeks of writing). AI generates net-new code rather than improving existing code. This does not mean AI reduces productivity — it means long-term maintenance costs are accumulating invisibly.
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+            <div style="background:rgba(255,107,107,0.08);border-radius:6px;padding:8px 10px;text-align:center">
+              <div style="font-size:16px;font-weight:800;color:var(--red)">+48%</div>
+              <div style="font-size:10px;color:var(--text2)">Code clone rate</div>
+            </div>
+            <div style="background:rgba(255,107,107,0.08);border-radius:6px;padding:8px 10px;text-align:center">
+              <div style="font-size:16px;font-weight:800;color:var(--red)">8x</div>
+              <div style="font-size:10px;color:var(--text2)">Duplicated blocks</div>
+            </div>
+            <div style="background:rgba(255,107,107,0.08);border-radius:6px;padding:8px 10px;text-align:center">
+              <div style="font-size:16px;font-weight:800;color:var(--red)">−60%</div>
+              <div style="font-size:10px;color:var(--text2)">Refactoring activity</div>
+            </div>
+            <div style="background:rgba(255,107,107,0.08);border-radius:6px;padding:8px 10px;text-align:center">
+              <div style="font-size:16px;font-weight:800;color:var(--red)">+84%</div>
+              <div style="font-size:10px;color:var(--text2)">Code churn</div>
+            </div>
+          </div>
+          <div class="citation-footer" style="justify-content:flex-start;gap:8px">
+            <a class="citation-link" href="https://www.gitclear.com/ai_assistant_code_quality_2025_research" target="_blank">gitclear.com → ai-code-quality-2025</a>
+            <a class="citation-link" href="https://www.gitclear.com/coding_on_copilot_data_shows_ais_downward_pressure_on_code_quality" target="_blank">Coding on Copilot (original)</a>
+          </div>
+        </div>
+
+        <!-- DORA cross-company -->
+        <div class="citation-card" style="border-left:3px solid #ffd166;margin-bottom:20px">
+          <div class="citation-header">
+            <div>
+              <div class="citation-title">DORA 2025 — What Separates High-Performing AI Adopters</div>
+              <div class="citation-meta">DORA (Google) · Cross-company survey · Thousands of developers · 2025</div>
+            </div>
+            <span class="badge badge-yellow">Cross-Company</span>
+          </div>
+          <div class="citation-finding">
+            <strong style="color:var(--text)">90%</strong> of software developers use AI (up 14% from 2024). <strong style="color:var(--text)">65%</strong> rely heavily on it. Yet most orgs see flat delivery metrics. The defining finding: <em>"AI amplifies existing practices."</em> Strong teams get stronger; weak teams' problems are amplified. The 7 capabilities that predict whether an org extracts value from AI:
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+            <div style="display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓</span> Clear AI policy (encourage + boundaries)</div>
+            <div style="display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓</span> High-quality internal developer platform</div>
+            <div style="display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓</span> Strong change management practices</div>
+            <div style="display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓</span> Psychological safety for experimentation</div>
+            <div style="display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓</span> Clear documentation and knowledge mgmt</div>
+            <div style="display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓</span> Established code review culture</div>
+            <div style="display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓</span> Automated testing and CI/CD</div>
+          </div>
+          <div class="citation-footer" style="justify-content:flex-start;gap:8px">
+            <a class="citation-link" href="https://dora.dev/research/2025/dora-report/" target="_blank">dora.dev → 2025 report</a>
+            <a class="citation-link" href="https://getdx.com/blog/ai-amplifies-bad-practices-real-gains-come-from-focusing-aiefforts-on-systems-and-success-depends-on-strong-change-management/" target="_blank">DX Blog → what DORA means for your AI strategy</a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Deep Dives -->
+      <div class="research-group" data-category="deepdive">
+        <div style="margin-bottom:10px;font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Deep Dives — Tools in Detail</div>
+
+        <!-- Relationship callout -->
+        <div class="insight insight-info" style="margin-bottom:20px">
+          <div class="insight-title">Block Goose → Stripe Minions: The Lineage</div>
+          Stripe's Minions are built on a fork of Block's open-source Goose agent. Goose is the public foundation; Minions is what happens when a company with a $1T-volume, compliance-critical codebase needs to productionize that foundation at scale. Understanding both tools is essential for any team planning to build autonomous coding agents.
+        </div>
+
+        <!-- Goose -->
+        <div class="card" style="margin-bottom:20px;border-color:rgba(0,212,170,0.25)">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+            <div style="width:42px;height:42px;border-radius:10px;background:rgba(0,212,170,0.15);display:flex;align-items:center;justify-content:center;font-size:22px">🪿</div>
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text)">Block Goose</div>
+              <div style="font-size:12px;color:var(--text2)">Open-source autonomous AI agent · Apache 2.0 · Released Jan 28, 2025 · 33K+ stars · 426+ contributors</div>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
+              <span class="badge badge-green">Open Source</span>
+              <span class="badge badge-blue">Local-first</span>
+              <span class="badge badge-purple">Model agnostic</span>
+            </div>
+          </div>
+
+          <!-- What it is -->
+          <div style="margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.4px">What It Is</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.7">Goose is a fully autonomous, locally-running AI agent framework built in Rust by Block (Square, Cash App). Unlike GitHub Copilot or Cursor — which suggest code — Goose <strong style="color:var(--text)">executes tasks end-to-end</strong>: install, execute, edit, and test. It was co-developed with Anthropic around the Model Context Protocol and open-sourced after Block deployed it to all 12,000 employees, where engineers report <strong style="color:var(--text)">8–10 hours saved per week</strong>.</div>
+          </div>
+
+          <!-- Architecture -->
+          <div style="margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.4px">Architecture</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+                <div style="font-size:11px;font-weight:700;color:var(--accent2);margin-bottom:3px">Agent Loop</div>
+                <div style="font-size:11px;color:var(--text2)">Planning-first: reasons through a plan before acting. Slower than reactive tools on simple edits; more reliable on complex multi-step workflows.</div>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+                <div style="font-size:11px;font-weight:700;color:var(--accent2);margin-bottom:3px">MCP Extension System</div>
+                <div style="font-size:11px;color:var(--text2)">Entire extensibility built on MCP. 3,000+ community servers. Tools, Resources, and Prompts as primitives via JSON-RPC 2.0.</div>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+                <div style="font-size:11px;font-weight:700;color:var(--accent2);margin-bottom:3px">Multi-Agent + Recipes</div>
+                <div style="font-size:11px;color:var(--text2)">First-class sub-agent spawning, dynamic model selection, and YAML Recipes for reusable team workflow automation.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interfaces -->
+          <div style="margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.4px">How to Use It</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+                <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px">CLI (<code style="font-size:10px;background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:3px">goose</code>)</div>
+                <div style="font-size:11px;color:var(--text2)">Terminal-native with session persistence. Describe task in natural language → Goose plans and executes. Best for system-level work, cross-API orchestration, automation scripts.</div>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+                <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px">Desktop App (Electron)</div>
+                <div style="font-size:11px;color:var(--text2)">Adds MCP-UI widgets: interactive dashboards, forms, progress bars rendered natively. Unique among CLI agents. Best for teams wanting visual feedback during agent runs.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Benchmark -->
+          <div style="margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.4px">Goose Vibe Check Benchmark (March 2025) — 32 Models, 8 Tasks</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:130px;font-size:11px;color:var(--text2);flex-shrink:0">Claude-3-5-Sonnet-2</div>
+                <div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden"><div style="width:100%;height:100%;background:var(--accent);border-radius:3px"></div></div>
+                <div style="width:32px;font-size:11px;font-weight:700;color:var(--text)">1.00</div>
+                <span class="badge badge-purple" style="font-size:10px">#1</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:130px;font-size:11px;color:var(--text2);flex-shrink:0">Claude-3-7-Sonnet</div>
+                <div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden"><div style="width:94%;height:100%;background:var(--accent);border-radius:3px"></div></div>
+                <div style="width:32px;font-size:11px;font-weight:700;color:var(--text)">0.94</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:130px;font-size:11px;color:var(--text2);flex-shrink:0">Claude-3-5-Haiku</div>
+                <div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden"><div style="width:91%;height:100%;background:var(--accent);border-radius:3px"></div></div>
+                <div style="width:32px;font-size:11px;font-weight:700;color:var(--text)">0.91</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:130px;font-size:11px;color:var(--text2);flex-shrink:0">GPT-4o / O1</div>
+                <div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden"><div style="width:81%;height:100%;background:#ffd166;border-radius:3px"></div></div>
+                <div style="width:32px;font-size:11px;font-weight:700;color:var(--text)">0.81</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:130px;font-size:11px;color:var(--text2);flex-shrink:0">Qwen2.5-Coder 32B</div>
+                <div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden"><div style="width:80%;height:100%;background:#6c8fff;border-radius:3px"></div></div>
+                <div style="width:32px;font-size:11px;font-weight:700;color:var(--text)">0.80</div>
+              </div>
+            </div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text3)">Key finding: Native tool-calling is the critical differentiator. Models using toolshim bridging were structurally capped at ~48% regardless of raw quality.</div>
+          </div>
+
+          <!-- Benefits & Limitations -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div style="background:rgba(0,212,170,0.06);border:1px solid rgba(0,212,170,0.15);border-radius:8px;padding:12px 14px">
+              <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.4px">Benefits</div>
+              <ul style="list-style:none;display:flex;flex-direction:column;gap:5px">
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>Free, Apache 2.0 — no licensing costs</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>Model agnostic — swap LLMs without reconfiguration</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>Local execution — data stays on machine</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>3,000+ MCP extension servers available</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>Recipes standardize team workflows as YAML</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>Proven at scale: 12,000 Block employees</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>Custom distributions for platform teams</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>Active community: 124 releases, 33K+ stars</li>
+              </ul>
+            </div>
+            <div style="background:rgba(255,107,107,0.06);border:1px solid rgba(255,107,107,0.15);border-radius:8px;padding:12px 14px">
+              <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.4px">Limitations</div>
+              <ul style="list-style:none;display:flex;flex-direction:column;gap:5px">
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Slow for simple, surgical edits (planning overhead)</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Recipe YAML learning curve</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>MCP spec lag (behind June 2025 spec as of July)</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>300+ open issues, 100+ unprocessed PRs</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Infinite loop risk on failing tests</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Context bloat on large monorepos</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Auth fragility (rate limits, expired tokens)</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>No native CI integration (manual setup required)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="citation-footer" style="justify-content:flex-start;gap:8px">
+            <a class="citation-link" href="https://github.com/block/goose" target="_blank">github.com/block/goose</a>
+            <a class="citation-link" href="https://block.github.io/goose/" target="_blank">Documentation</a>
+            <a class="citation-link" href="https://block.github.io/goose/blog/2025/03/31/goose-benchmark/" target="_blank">Vibe Check Benchmark</a>
+            <a class="citation-link" href="https://block.xyz/inside/block-open-source-introduces-codename-goose" target="_blank">Launch announcement</a>
+          </div>
+        </div>
+
+        <!-- Stripe Minions -->
+        <div class="card" style="margin-bottom:20px;border-color:rgba(108,99,255,0.25)">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+            <div style="width:42px;height:42px;border-radius:10px;background:rgba(108,99,255,0.15);display:flex;align-items:center;justify-content:center;font-size:22px">⚡</div>
+            <div>
+              <div style="font-size:16px;font-weight:800;color:var(--text)">Stripe Minions</div>
+              <div style="font-size:12px;color:var(--text2)">Proprietary autonomous coding agents · Internal only · 1,300+ PRs/week · Built on Goose fork · Feb 2026</div>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
+              <span class="badge badge-red">Internal only</span>
+              <span class="badge badge-yellow">One-shot</span>
+              <span class="badge badge-purple">1,300 PRs/wk</span>
+            </div>
+          </div>
+
+          <!-- What it is -->
+          <div style="margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.4px">What It Is</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.7">Minions is Stripe's proprietary internal autonomous coding agent — not a product, but infrastructure. Engineers send a Slack message; a PR appears. <strong style="color:var(--text)">No human writes code. No back-and-forth during execution.</strong> As of February 2026, Minions merges 1,300+ PRs per week — all reviewed by a human before merge — supporting infrastructure that processes $1T+ in annual payment volume. The underlying codebase: hundreds of millions of lines of Ruby with proprietary libraries unknown to any public LLM.</div>
+          </div>
+
+          <!-- Architecture pillars -->
+          <div style="margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.4px">4 Architectural Pillars</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;border-left:2px solid #6c63ff">
+                <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px">1. Devboxes</div>
+                <div style="font-size:11px;color:var(--text2)">Every Minion runs in an isolated AWS EC2 VM — same environment human engineers use. Pre-warmed pool spins up in ~10 seconds. Isolated from production and internet. Disposable: failed runs are discarded. Enables safe parallel agent execution.</div>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;border-left:2px solid #00d4aa">
+                <div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:4px">2. Blueprints</div>
+                <div style="font-size:11px;color:var(--text2)">Core execution primitive: interweaves <strong style="color:var(--text)">deterministic nodes</strong> (git ops, linting, CI steps) with <strong style="color:var(--text)">agent loops</strong> (LLM reasoning). Deterministic nodes prevent unrecoverable mid-task decisions. "The walls are doing more work than the model."</div>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;border-left:2px solid #ffd166">
+                <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:4px">3. Toolshed (MCP)</div>
+                <div style="font-size:11px;color:var(--text2)">Internal MCP server with ~500 curated tools spanning Stripe's internal systems and SaaS. Minions receive scoped subsets — not full access. Capability traded for safety. Modeled on Stripe's compliance philosophy.</div>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;border-left:2px solid #6c8fff">
+                <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:4px">4. CI Integration</div>
+                <div style="font-size:11px;color:var(--text2)">Runs selective tests from a 3M+ test battery. <strong style="color:var(--text)">Two CI rounds maximum</strong> — hard cap. Third failure = handoff to human. Empirically found to be the optimal cost/reliability tradeoff.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Workflow -->
+          <div style="margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.4px">Workflow</div>
+            <div style="display:flex;gap:0;margin-bottom:8px">
+              <div style="flex:1;text-align:center;padding:10px 6px;background:rgba(108,99,255,0.1);border-radius:8px 0 0 8px;border:1px solid rgba(108,99,255,0.2);border-right:none">
+                <div style="font-size:18px;margin-bottom:4px">💬</div>
+                <div style="font-size:10px;font-weight:700;color:var(--accent)">Slack / CLI / Web</div>
+                <div style="font-size:10px;color:var(--text2)">Engineer writes task</div>
+              </div>
+              <div style="flex:1;text-align:center;padding:10px 6px;background:var(--surface2);border:1px solid var(--border);border-right:none">
+                <div style="font-size:18px;margin-bottom:4px">🖥</div>
+                <div style="font-size:10px;font-weight:700;color:var(--text)">Devbox spins up</div>
+                <div style="font-size:10px;color:var(--text2)">~10 seconds</div>
+              </div>
+              <div style="flex:1;text-align:center;padding:10px 6px;background:var(--surface2);border:1px solid var(--border);border-right:none">
+                <div style="font-size:18px;margin-bottom:4px">⚙️</div>
+                <div style="font-size:10px;font-weight:700;color:var(--text)">Blueprint runs</div>
+                <div style="font-size:10px;color:var(--text2)">Deterministic + agent loops</div>
+              </div>
+              <div style="flex:1;text-align:center;padding:10px 6px;background:var(--surface2);border:1px solid var(--border);border-right:none">
+                <div style="font-size:18px;margin-bottom:4px">🧪</div>
+                <div style="font-size:10px;font-weight:700;color:var(--text)">CI (max 2 rounds)</div>
+                <div style="font-size:10px;color:var(--text2)">Auto test fixes</div>
+              </div>
+              <div style="flex:1;text-align:center;padding:10px 6px;background:rgba(0,212,170,0.08);border-radius:0 8px 8px 0;border:1px solid rgba(0,212,170,0.2)">
+                <div style="font-size:18px;margin-bottom:4px">👁</div>
+                <div style="font-size:10px;font-weight:700;color:var(--green)">PR → Human review</div>
+                <div style="font-size:10px;color:var(--text2)">100% required</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--text3)">Best task types: Config changes · Dependency upgrades · Minor refactors · Documentation · Cross-cutting pattern application · Test additions for existing code</div>
+          </div>
+
+          <!-- Safety data -->
+          <div class="insight insight-warning" style="margin-bottom:16px">
+            <div class="insight-title">⚠ Why the Architecture Matters: AI Code Quality Data</div>
+            CodeRabbit analysis cited by Stripe: AI-generated code introduces <strong>1.75x more logic errors</strong> and <strong>2.74x more XSS vulnerabilities</strong> than human-written code. Minions' entire architecture — devbox isolation, curated Toolshed access, deterministic Blueprint nodes, hard CI cap, mandatory human review — is explicitly designed around this reality.
+          </div>
+
+          <!-- Benefits & Limitations -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div style="background:rgba(0,212,170,0.06);border:1px solid rgba(0,212,170,0.15);border-radius:8px;padding:12px 14px">
+              <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.4px">Benefits</div>
+              <ul style="list-style:none;display:flex;flex-direction:column;gap:5px">
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>1,300+ production PRs/week at verified scale</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>One-shot design minimizes latency and cost</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>Architecture explicitly designed for AI failure modes</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>Parallel execution of many agents simultaneously</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>Devbox isolation: secure + reproducible</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>Two-round CI cap prevents runaway compute costs</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>Contextual rule files prevent context pollution</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--green)">✓ </span>Reuses existing human developer infrastructure</li>
+              </ul>
+            </div>
+            <div style="background:rgba(255,107,107,0.06);border:1px solid rgba(255,107,107,0.15);border-radius:8px;padding:12px 14px">
+              <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.4px">Limitations</div>
+              <ul style="list-style:none;display:flex;flex-direction:column;gap:5px">
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Not available externally — internal only</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Brittle on ambiguous task specifications (one-shot)</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Fork cost: can't benefit from Goose upstream improvements</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Review bottleneck: 1,300 AI PRs/week may exceed meaningful review capacity</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Code churn: high lines-touched to net-change ratio</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Skill atrophy risk for engineers shifted to review-only</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Not suitable for open-ended architectural decisions</li>
+                <li style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">✗ </span>Ongoing rule file investment required as codebase evolves</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="citation-footer" style="justify-content:flex-start;gap:8px">
+            <a class="citation-link" href="https://stripe.dev/blog/minions-stripes-one-shot-end-to-end-coding-agents" target="_blank">stripe.dev → minions part 1</a>
+            <a class="citation-link" href="https://stripe.dev/blog/minions-stripes-one-shot-end-to-end-coding-agents-part-2" target="_blank">part 2 (Feb 2026)</a>
+            <a class="citation-link" href="https://www.anup.io/stripes-coding-agents-the-walls-matter-more-than-the-model/" target="_blank">Analysis: The Walls Matter More</a>
+            <a class="citation-link" href="https://www.infoq.com/news/2026/03/stripe-autonomous-coding-agents/" target="_blank">InfoQ (Mar 2026)</a>
+          </div>
+        </div>
+
+        <!-- Side-by-side comparison -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title" style="margin-bottom:14px">Goose vs Minions — Side by Side</div>
+          <table class="tool-table">
+            <thead>
+              <tr>
+                <th>Dimension</th>
+                <th>Block Goose</th>
+                <th>Stripe Minions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="font-size:12px;font-weight:600;color:var(--text)">Availability</td><td><span class="badge badge-green">Open source (Apache 2.0)</span></td><td><span class="badge badge-red">Internal only</span></td></tr>
+              <tr><td style="font-size:12px;font-weight:600;color:var(--text)">Operation mode</td><td style="font-size:12px;color:var(--text2)">Human-supervised or autonomous</td><td style="font-size:12px;color:var(--text2)">Fully unattended, one-shot</td></tr>
+              <tr><td style="font-size:12px;font-weight:600;color:var(--text)">Model support</td><td style="font-size:12px;color:var(--text2)">Any LLM with tool-calling</td><td style="font-size:12px;color:var(--text2)">Stripe's internal LLM infra</td></tr>
+              <tr><td style="font-size:12px;font-weight:600;color:var(--text)">Extension system</td><td style="font-size:12px;color:var(--text2)">Community MCP (3,000+ servers)</td><td style="font-size:12px;color:var(--text2)">Internal Toolshed (~500 curated tools)</td></tr>
+              <tr><td style="font-size:12px;font-weight:600;color:var(--text)">Execution env</td><td style="font-size:12px;color:var(--text2)">Local machine</td><td style="font-size:12px;color:var(--text2)">Isolated AWS EC2 devboxes</td></tr>
+              <tr><td style="font-size:12px;font-weight:600;color:var(--text)">Task specification</td><td style="font-size:12px;color:var(--text2)">Conversational or YAML Recipes</td><td style="font-size:12px;color:var(--text2)">Slack thread, CLI, web interface</td></tr>
+              <tr><td style="font-size:12px;font-weight:600;color:var(--text)">Feedback loop</td><td style="font-size:12px;color:var(--text2)">Interactive by default</td><td style="font-size:12px;color:var(--text2)">None during execution</td></tr>
+              <tr><td style="font-size:12px;font-weight:600;color:var(--text)">CI integration</td><td style="font-size:12px;color:var(--text2)">External / manual</td><td style="font-size:12px;color:var(--text2)">Native, 3M-test battery, 2-round cap</td></tr>
+              <tr><td style="font-size:12px;font-weight:600;color:var(--text)">Scale</td><td style="font-size:12px;color:var(--text2)">12,000 Block employees</td><td style="font-size:12px;color:var(--text2)">1,300+ PRs/week</td></tr>
+              <tr><td style="font-size:12px;font-weight:600;color:var(--text)">Who should use it</td><td style="font-size:12px;color:var(--text2)">Any team — free to adopt today</td><td style="font-size:12px;color:var(--text2)">Study the patterns; build your own version</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Key takeaway -->
+        <div class="insight insight-success" style="margin-bottom:20px">
+          <div class="insight-title">What to Take Away for Your Team</div>
+          <strong>Use Goose today</strong> if you want a free, local, model-agnostic autonomous agent with a massive extension ecosystem. Install it, write a Recipe for your most repetitive workflow, and measure time saved. <br><br>
+          <strong>Study Minions' patterns</strong> even though you can't use it directly: Blueprints (deterministic + agent interleaving), the two-CI-shot rule, devbox isolation, and curated tool access are architectural decisions any team building agents at scale should adopt.
+        </div>
+
+      </div>
+
+      <!-- Upcoming research -->
+      <div class="card" style="border-color:rgba(108,99,255,0.2)">
+        <div class="card-title" style="margin-bottom:12px">Upcoming Research Areas</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:6px">
+            <span style="color:var(--text3);font-size:12px;margin-top:1px">◻</span>
+            <span style="font-size:12px;color:var(--text2)">Company case studies: Shopify, Stripe, Airbnb, Netflix AI adoption</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:6px">
+            <span style="color:var(--text3);font-size:12px;margin-top:1px">◻</span>
+            <span style="font-size:12px;color:var(--text2)">Emerging tools: Devin (Cognition AI), SWE-agent, OpenHands</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:6px">
+            <span style="color:var(--text3);font-size:12px;margin-top:1px">◻</span>
+            <span style="font-size:12px;color:var(--text2)">Model Context Protocol (MCP) ecosystem and agent integration</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:6px">
+            <span style="color:var(--text3);font-size:12px;margin-top:1px">◻</span>
+            <span style="font-size:12px;color:var(--text2)">"Vibe coding" trend: applicability to professional development</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:6px">
+            <span style="color:var(--text3);font-size:12px;margin-top:1px">◻</span>
+            <span style="font-size:12px;color:var(--text2)">Engineering leader perspectives: Pragmatic Engineer, Simon Willison</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:6px">
+            <span style="color:var(--text3);font-size:12px;margin-top:1px">◻</span>
+            <span style="font-size:12px;color:var(--text2)">Andrej Karpathy's analysis of AI-native development patterns</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // Navigation
+  function showPage(id, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    el.classList.add('active');
+  }
+
+  // Role tabs
+  function showRole(id, el) {
+    document.querySelectorAll('.role-content').forEach(r => r.classList.remove('active'));
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('role-' + id).classList.add('active');
+    el.classList.add('active');
+  }
+
+  // Rating bars
+  function buildRating(id, filled, total = 5, color = '#6c63ff') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let html = '';
+    for (let i = 1; i <= total; i++) {
+      const cls = i <= filled ? 'dot-filled' : 'dot-empty';
+      const bg = i <= filled ? color : '';
+      html += `<div class="rating-dot ${cls}" ${bg ? `style="background:${bg}"` : ''}></div>`;
+    }
+    el.innerHTML = html;
+  }
+
+  // Claude Code
+  buildRating('r1', 5, 5, '#6c63ff');
+  buildRating('r2', 5, 5, '#6c63ff');
+  buildRating('r3', 4, 5, '#6c63ff');
+  // Cursor
+  buildRating('r4', 4, 5, '#00d4aa');
+  buildRating('r5', 4, 5, '#00d4aa');
+  buildRating('r6', 5, 5, '#00d4aa');
+  // Copilot
+  buildRating('r7', 3, 5, '#ffd166');
+  buildRating('r8', 3, 5, '#ffd166');
+  buildRating('r9', 5, 5, '#ffd166');
+  // Windsurf
+  buildRating('r10', 3, 5, '#ff6b6b');
+  buildRating('r11', 4, 5, '#ff6b6b');
+  buildRating('r12', 4, 5, '#ff6b6b');
+  // Codex
+  buildRating('r13', 4, 5, '#6c8fff');
+  buildRating('r14', 4, 5, '#6c8fff');
+  buildRating('r15', 2, 5, '#6c8fff');
+  // Kiro
+  buildRating('r16', 3, 5, '#9a9db8');
+  buildRating('r17', 3, 5, '#9a9db8');
+  buildRating('r18', 3, 5, '#9a9db8');
+
+  // Reasoning bars on metrics page
+  const reasoningData = [
+    { name: 'Claude Code', val: 96, color: '#6c63ff' },
+    { name: 'Cursor',      val: 80, color: '#00d4aa' },
+    { name: 'Codex',       val: 78, color: '#6c8fff' },
+    { name: 'Windsurf',    val: 68, color: '#ff6b6b' },
+    { name: 'GitHub Copilot', val: 60, color: '#ffd166' },
+    { name: 'Kiro',        val: 55, color: '#9a9db8' },
+  ];
+
+  const barsEl = document.getElementById('reasoning-bars');
+  barsEl.innerHTML = reasoningData.map(d => `
+    <div class="progress-row">
+      <div class="progress-label">${d.name}</div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width:0%;background:${d.color}" data-target="${d.val}"></div>
+      </div>
+      <div class="progress-val">${d.val}%</div>
+    </div>
+  `).join('');
+
+  // Animate bars when metrics page becomes visible
+  function animateBars() {
+    document.querySelectorAll('.progress-fill').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+  }
+
+  // Research filter
+  function filterResearch(category, el) {
+    document.querySelectorAll('#page-research .role-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.research-group').forEach(g => {
+      if (category === 'all' || g.dataset.category === category) {
+        g.style.display = 'block';
+      } else {
+        g.style.display = 'none';
+      }
+    });
+  }
+
+  // Override showPage to animate bars when metrics opens
+  const origShowPage = window.showPage;
+  window.showPage = function(id, el) {
+    origShowPage(id, el);
+    if (id === 'metrics') setTimeout(animateBars, 50);
+  };
+</script>
+</body>
+</html>
