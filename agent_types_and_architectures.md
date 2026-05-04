@@ -597,6 +597,158 @@ Agents don't respect traditional team boundaries — a foundation model response
 
 ---
 
+## Improvement Loops for Agentic Systems
+
+*Source: "Building Applications with AI Agents" — Michael Albada (O'Reilly, Ch. 11)*
+
+### The Core Principle
+
+In complex multiagent systems, failure is not an anomaly — it's an inevitability. The real test is how well a system learns from those failures and improves over time. Continuous improvement is an interconnected cycle of three pillars:
+
+| Pillar | Purpose | Key Techniques |
+|---|---|---|
+| **Feedback Pipelines** | Observe, diagnose, and prioritize issues from live interactions | Automated issue detection, RCA, HITL review, prompt/tool refinement |
+| **Experimentation** | Validate changes in controlled environments before broad rollout | Shadow deployments, A/B testing, Bayesian Bandits |
+| **Continuous Learning** | Embed adaptations into the system permanently or dynamically | In-context learning, offline retraining, DSPy optimization |
+
+> Analogy: Reinforcement learning — agents learn optimal behaviors through iterative interactions, receiving signals from their environment and adapting. The improvement loop applies this principle to production agent systems.
+
+---
+
+### Feedback Pipelines
+
+**What they do:** Continuously monitor interactions, detect failure patterns, cluster issues, and surface actionable insights at scale. Tools: **DSPy** (Stanford NLP — declarative self-improving LM programs), **Microsoft Trace** (generative optimization via general feedback signals, not gradients), **Automatic Prompt Optimization (APO)**.
+
+**Automated Issue Detection triggers:**
+- Repeated failures in a particular skill or tool
+- Spikes in error rates or response times
+- Anomalies in user engagement or satisfaction
+- Divergent behavior across agent versions
+
+**Root Cause Analysis (RCA) steps:**
+1. **Workflow tracing** — reconstruct the end-to-end chain of decisions, tool invocations, and interactions leading to failure
+2. **Fault localization** — isolate the precise component (misinterpreted prompt, wrong skill, malformed tool parameter)
+3. **Pattern recognition** — is this isolated or a recurring trend across user cohorts or system states?
+4. **Impact assessment** — frequency × severity to prioritize response
+
+> RCA in agentic systems often reveals non-technical root causes: ambiguous task definitions, gaps in training data, evolving user expectations, or misaligned success metrics.
+
+**Human-in-the-Loop (HITL) Review** — required when automated analysis is insufficient:
+- Persistent errors with no clear technical explanation
+- Anomalies with regulatory or ethical implications
+- Failures in high-value or mission-critical tasks
+- Conflicting diagnoses from automated tools
+
+Escalation threshold: escalate if model certainty < 0.7, or if consequence × uncertainty exceeds a risk threshold. Aim for <10% of cases escalated to avoid human fatigue. HITL review should involve product managers, data scientists, and UX researchers — not just engineers.
+
+**Prompt Refinement patterns:**
+- Rewrite for clarity — eliminate ambiguity, specify expected formats
+- Add exemplars — positive and negative examples to anchor reasoning
+- Decompose tasks — split complex instructions into sequential prompts
+- Expand context — add constraints, background, or error-handling guidance
+
+**DSPy for automated prompt optimization:**
+```python
+import dspy
+dspy.configure(lm=dspy.OpenAI(model="gpt-4o-mini"))
+
+# Define ReAct module, provide annotated trainset, run MIPROv2 optimizer
+react = dspy.ReAct("alert -> response", tools=[lookup_threat_intel, query_logs])
+tp = dspy.MIPROv2(metric=dspy.evaluate.answer_exact_match, auto="light", num_threads=24)
+optimized_react = tp.compile(react, trainset=trainset)
+# Result: optimized prompts without manual tweaking
+```
+
+**Tool Refinement** addresses: incorrect tool selection, parameter mismatches, gaps in toolset, tool chaining failures. Refinements operate at three levels: internal logic optimization, capability expansion, and integration improvements.
+
+**Prioritization framework for improvements:**
+- **Frequency** — how often does it occur?
+- **Severity/Impact** — business or user consequence?
+- **Feasibility** — effort required to fix?
+- **Strategic alignment** — does it enable a key initiative or compliance milestone?
+- **Recurrence risk** — systemic vs. isolated failure?
+
+Treat the improvement backlog as a living artifact. Regular triage meetings and cross-team syncs ensure priorities shift with new incidents and strategic changes.
+
+---
+
+### Experimentation
+
+Changes in agentic systems — even minor prompt tweaks — can have far-reaching, unpredictable consequences. Experimentation provides structured, incremental pathways from insight to deployment.
+
+**Shadow Deployments**
+Updated agent runs in parallel with production, processing identical inputs but without serving outputs to users. Only production outputs reach users; shadow outputs are logged for comparison.
+
+- Best for: high-impact/high-risk changes (planning workflows, major prompt modifications, external system integrations)
+- Measures: tool selection differences, latency, token usage, hallucination frequency
+- Challenge: HITL-dependent agents can't interact with users in shadow — use historical replays or synthetic responses
+
+**A/B Testing**
+Live traffic split between control (A) and treatment (B) variants. Users interact with one version; quantifiable metrics determine the winner.
+
+Best practices:
+- Define clear metrics aligned to the change objective
+- Ensure sufficient sample size for statistical significance
+- Use "sticky" user assignments to prevent cross-version contamination in stateful agents
+- Monitor both short- and long-term effects — quick gains can mask long-term regressions
+
+Tools: LaunchDarkly, Optimizely, or custom dashboards for traffic allocation and metric collection.
+
+**Bayesian Bandits**
+Adaptive experimentation that dynamically shifts traffic toward winning variants mid-experiment — no fixed 50/50 split. Models each variant as a "slot machine arm" with unknown odds, using Bayesian updates to reallocate traffic as rewards accumulate.
+
+- **Responsiveness** — shifts allocations in near-real time, reducing opportunity cost
+- **Efficiency** — majority of users experience the best configuration as soon as it's identified
+- **Scalability** — handles many parameters simultaneously, faster than sequential fixed experiments
+
+When to use: real-time personalization agents, adaptive multiagent workflows, environments where user behavior shifts rapidly. Requires clear reward signals (task success, user satisfaction) and vigilant oversight to prevent optimizing for misleading proxies.
+
+| Method | Best For | Key Limitation |
+|---|---|---|
+| Shadow Deployment | High-risk changes, no user exposure | Can't handle interactive/HITL flows |
+| A/B Testing | Measurable incremental changes | Needs sufficient traffic; stateful agents require careful design |
+| Bayesian Bandits | Dynamic, data-rich environments | Requires well-defined reward signals; risk of short-term exploitation |
+
+---
+
+### Continuous Learning
+
+**In-Context Learning** — immediate, session-bound adaptation without model retraining:
+- Embed examples, intermediate reasoning steps, or contextual signals into prompts at runtime
+- Incorporate real-time user feedback (corrections, clarifications) within the same session
+- Requires careful context management: rolling windows, semantic compression, vector-based memory retrieval
+
+Limitations: adaptations are ephemeral — lost when the session ends. Use as a testing ground; successful strategies must be promoted to prompt engineering or offline retraining for permanence.
+
+**Offline Retraining** — periodic, structured embedding of lasting improvements:
+1. **Data curation** — gather and label examples from production traces; ensure diversity to avoid bias
+2. **Model updates** — few-shot optimization (DSPy) or fine-tuning (LoRA adapters) on held-out data
+3. **Validation** — test offline against benchmarks, then via shadow deployment before rollout
+
+Best for: systemic issues identified over time (recurring reasoning misalignments, tool usage patterns, evolving threat vectors). Strengths: changes persist across sessions; scalable for high-volume systems. Limitation: computational cost and risk of overfitting to historical data if retraining is too frequent.
+
+---
+
+### The Full Loop
+
+```
+Production Failures / User Signals
+        ↓
+Feedback Pipelines (detect, cluster, RCA, HITL)
+        ↓
+Prioritized Improvement Backlog
+        ↓
+Experimentation (shadow → A/B → bandit)
+        ↓
+Continuous Learning (in-context → offline retraining)
+        ↓
+Better Agent → Back to Production
+```
+
+> **Org culture note:** Improvement loops are as much organizational as technical. They require alignment across engineering, data science, product, and UX — and a culture that treats every failure as signal, not setback. Documentation is the connective tissue: preserving lessons so teams don't repeat the same mistakes.
+
+---
+
 ## Agent Tool Accuracy Evaluation
 
 Beyond runtime monitoring, evaluating agent quality requires systematic end-to-end testing against ground truth scenarios. The core approach: run the agent end-to-end, extract its chosen actions (tool invocations + arguments), and compare against expected outcomes.
