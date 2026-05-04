@@ -410,6 +410,193 @@ Without observability: blind spots in agent behavior, undetected cost anomalies,
 
 ---
 
+## Agent Production Monitoring
+
+*Source: "Building Applications with AI Agents" — Michael Albada (O'Reilly, Ch. 10)*
+
+### Why Agent Monitoring Is Different
+
+Shipping agentic systems is only the halfway point. Agents behave **probabilistically** — they depend on foundation models, chain tools together, and respond to unbounded user inputs. You cannot write exhaustive tests for every scenario. That makes monitoring the nervous system of your deployed agent infrastructure.
+
+Monitoring is not just about detecting problems — it is a **tight feedback loop** that accelerates learning and iteration. Agent failures are subtle: a tool succeeds but cascades errors; an LLM output sounds fluent yet misleads; a plan partially works but misses the goal. These mismatches rarely crash systems. Monitoring must expose them swiftly.
+
+> **Key principle:** Every production failure is a test case. Every exemplary success is a golden path. Export both into your CI/CD corpus — this "shifts left" your monitoring strategy and continuously validates new agent versions against real-world complexity.
+
+---
+
+### The Reference Open Source Stack
+
+| Tool | Role |
+|---|---|
+| **OpenTelemetry (OTel)** | Instrument agent workflows — traces, metrics, structured logs |
+| **Loki** | Log aggregation and structured querying |
+| **Tempo** | Distributed trace backend — filter by latency, error, span attributes |
+| **Grafana** | Unified visualization, dashboards, and alerting |
+
+This stack integrates with the same Prometheus/Grafana infrastructure used for production services. No separate monitoring stack needed — agents benefit from the same rigor as any other critical software service.
+
+**Privacy note:** Logs may contain user messages, tool inputs, or LLM generations. Configure separate monitoring clusters with RBAC, encryption-at-rest, and PII redaction. OTel provides hooks for data scrubbing during span export.
+
+---
+
+### Metrics Taxonomy
+
+| Layer | Metric | Why It Matters | Action |
+|---|---|---|---|
+| **Infrastructure** | CPU/memory, uptime, request latency (P50/P95/P99) | System health and scaling pressure | Autoscale, tune caching, trigger incident response |
+| **Workflow** | Task success rate | How often agents complete intended workflows | Investigate failures or update prompts |
+| **Workflow** | Token usage (workflow level) | Rapid changes indicate issues | Prune prompts or adjust model tier |
+| **Workflow** | Tool call success/failure rate | Detects degraded integrations or tool misuse | Patch wrappers or fail over automatically |
+| **Workflow** | Retry + fallback frequency | Identifies instability in plans or tools | Debounce retries, refine planning logic, escalate to human |
+| **Output quality** | Hallucination indicator | Semantic accuracy of generated content | Introduce grounding or LLM critique steps |
+| **Output quality** | Embedding drift from baseline | Distribution shifts in user inputs | Adjust workflows or fine-tune prompt |
+| **User feedback** | Requery/rephrasing rate | Whether users are understood on first try | Improve intent classification |
+| **User feedback** | Task abandonment rate | Workflows that confuse or frustrate users | Simplify flows, add clarification prompts |
+| **User feedback** | Explicit ratings (thumbs up/down) | Qualitative assessment of helpfulness | Triage outputs for evaluation |
+
+---
+
+### Monitoring Stack Comparison
+
+| Stack | Key Strength | Best For | Trade-off |
+|---|---|---|---|
+| **Grafana + OTel + Loki + Tempo** | Composability and visualization | Enterprise ops, no vendor lock-in | More components to manage |
+| **ELK Stack** | Advanced full-text and vector search | Large-scale logs, existing ELK investments | Higher resource use (Elasticsearch is memory-intensive) |
+| **Arize Phoenix** | Structured tracing + evals, Jupyter integration | Dev/ML iteration, debugging | Limited production scale; supplement not replace |
+| **SigNoz** | Unified OTel-native, lightweight | Startups, ML-focused teams | Less extensible ecosystem |
+| **Langfuse** | LLM-native: token cost tracking, session replay, A/B prompt testing | Semantic monitoring, dev teams | Narrower infra coverage; pair with Prometheus |
+
+**Decision rule:** If you have an existing enterprise stack (Splunk, Datadog, New Relic), extend it with OTel instrumentation unless you need LLM-specific evals (use Langfuse/Phoenix) or advanced search (ELK). For greenfield, Grafana or SigNoz provide broad coverage.
+
+---
+
+### OTel Instrumentation for LangGraph
+
+Each LangGraph node is an isolated, explicitly declared function — straightforward to instrument with OTel spans. Recommended span attributes per node type:
+
+- **Tool-calling nodes:** tool name, method called, latency, success/failure, error codes
+- **LLM generation nodes:** prompt identifier, input/output token counts, model latency, hallucination risk flag
+
+```python
+from opentelemetry import trace
+tracer = trace.get_tracer("agent")
+
+async def call_tool_node(context):
+    with tracer.start_as_current_span("call_tool", attributes={
+        "tool": context.tool_name,
+        "input_tokens": context.token_usage.input,
+        "output_tokens": context.token_usage.output,
+    }):
+        result = await call_tool(context)
+        return result
+```
+
+Spans support: nested subspans (downstream API calls), events (fallback triggers, retries), and automatic exception capture. OTel context propagates automatically across async calls — full end-to-end trace across branched agent flows without architectural changes.
+
+**Scoping rule:** Attach just enough context per step — user request IDs, session metadata, agent config state, skill names, evaluation signals — so failure trails are coherent and searchable. Too much detail becomes noisy; too little blocks root cause analysis.
+
+---
+
+### Visualization and Alerting in Grafana
+
+Grafana connects to Loki (logs) and Tempo (traces) as native data sources. Key dashboard panels for agent systems:
+
+- Token usage per agent per hour (detect model verbosity regressions)
+- P95 latency for tool calls and planning nodes
+- Task success rate by workflow or prompt template version
+- Fallback frequency by tool or skill
+- Embedding similarity drift of user queries over time
+
+**Alert triggers to configure:**
+- Hallucination rate exceeds 5% in the last 30 minutes
+- Retry loops occur more than 3 times in a single session
+- Average response time for a critical tool increases >50%
+- Tool call error rate spikes above threshold
+
+**Integrations:** PagerDuty for on-call escalation; Sentry for exception capture with stack traces and release health; AgentOps.ai as an all-in-one alternative combining tracing, metrics, evals, and alerting in a single package.
+
+---
+
+### Monitoring Patterns
+
+**Shadow Mode**
+Run a new agent version alongside production, processing the same inputs without serving outputs to users. Instrument both with OTel + shared request ID, label shadow spans in Loki/Tempo. Compare tool selection, latency, token usage, and hallucination frequency before any user exposure.
+
+**Canary Deployments**
+Serve a new agent version to 1–5% of real traffic. Filter all Grafana metrics and traces by version tag to compare success rates, latency, and error counts. Expand if the canary holds; roll back immediately if it regresses. Canarying provides the safety needed to iterate quickly in production.
+
+**Regression Trace Collection**
+Automatically export production failure traces (Tempo) and log snapshots (Loki) into your test suite. Production failures become test cases; exemplary successes become golden paths. Re-running exported traces after a fix validates the repair. Over time, the evaluation set reflects real-world edge cases.
+
+**Self-Healing Agents**
+Agents that read their own telemetry in real time can implement fallback mechanisms:
+- Repeated tool call failures → reroute to simpler fallback plan or ask user for clarification
+- Latency spikes → skip optional reasoning steps
+- High hallucination scores → issue disclaimer or defer to human review
+
+Each fallback decision should be logged and traced so teams can analyze when and why fallbacks triggered.
+
+---
+
+### Distinguishing True Failures from Expected Variation
+
+A decision tree for probabilistic agent outputs:
+
+1. Does output meet success criteria (e.g., eval score > 0.8)? → **Yes:** monitor trends, no action needed
+2. **No** → Is it reproducible? (rerun 3–5 times; failure rate >80%) → **Yes:** systematic bug for engineering review
+3. **Not reproducible** → Check confidence/variance (LLM score > 0.7, KL divergence < 0.2 from baseline)
+   - Within bounds → expected variation, log for drift watch
+   - Outside bounds → anomalous failure, check input drift (PSI > 0.1), trigger mitigation (retraining or guardrails)
+
+---
+
+### Detecting Distribution Shifts
+
+**Kolmogorov-Smirnov (KS) test** — detects shifts in continuous features (query lengths, latencies):
+```python
+from scipy import stats
+ks_stat, p_value = stats.ks_2samp(historical, current)
+if ks_stat > 0.1:  # paired with p-value < 0.05
+    print(f"Drift detected: KS = {ks_stat}")
+```
+
+**KL Divergence** — measures concept drift via token distribution shifts:
+```python
+# KL(P||Q) — higher values = greater drift from historical baseline P
+# Threshold > 0.5 flags meaningful concept changes
+```
+
+**Population Stability Index (PSI)** — detects shifts in categorical variables (tool usage categories):
+```python
+# PSI < 0.1: stable | 0.1–0.25: monitor | > 0.25: intervene (retrain)
+```
+
+**Early warning signals:** accuracy drop >5–10% over 24-hour rolling window; task abandonment increase >15%; retry surge >20% session rate; cosine similarity of query embeddings vs. baseline falling below 0.8.
+
+---
+
+### Cross-Functional Metric Ownership (RACI)
+
+Agents don't respect traditional team boundaries — a foundation model response is the product; a chain of retries is the user experience; a 5-second planning delay is often a prompt design decision.
+
+| Metric | Product Team | ML Engineers | Infra/SRE |
+|---|---|---|---|
+| Latency (planning, tool calls) | A — owns user impact | R — optimizes prompts/models | R — monitors infra causes |
+| Hallucination rates | C — user feedback context | A/R — owns detection/mitigation | I — alerting setup |
+| Task success rate | A/R — defines success criteria | C — model improvements | I — system reliability |
+| Token usage/cost | C — business impact | R — optimizes generations | A — owns budgeting/scaling |
+| Distribution shifts | I — product adjustments | A/R — detects via embeddings | C — data pipeline stability |
+| Fallback/retry frequency | C — UX fallbacks | R — refines planning logic | A — owns reliability |
+| User feedback/sentiment | A/R — owns aggregation | C — model correlation | I — ops alerts |
+
+**Practices that make cross-functional monitoring work:**
+- Tag spans and logs with product context (feature flag, user tier, workflow ID)
+- Build shared dashboards — product leads see how planning latency correlates with abandonment; ML monitors hallucination alongside user feedback; SRE alerts on token spikes and tool flakiness
+- Run cross-functional triage rituals after launches or major regressions
+- Hold foundation model latency to the same bar as any other service — slowness that impacts users is everyone's problem
+
+---
+
 ## Agent Tool Accuracy Evaluation
 
 Beyond runtime monitoring, evaluating agent quality requires systematic end-to-end testing against ground truth scenarios. The core approach: run the agent end-to-end, extract its chosen actions (tool invocations + arguments), and compare against expected outcomes.
