@@ -330,3 +330,80 @@ The industry has converged on SWE-Bench Verified as the primary benchmark for au
 - Fine-grained access control and sandboxed runtimes
 
 Source: [arxiv.org/abs/2511.03690](https://arxiv.org/abs/2511.03690); [openhands.dev](https://openhands.dev/blog/openhands-codeact-21-an-open-state-of-the-art-software-development-agent)
+
+---
+
+## Observability and Monitoring for Agentic AI (AWS Prescriptive Guidance)
+
+Source: [AWS Prescriptive Guidance — Agentic AI Serverless Observability](https://docs.aws.amazon.com/prescriptive-guidance/latest/agentic-ai-serverless/observability-and-monitoring.html)
+
+### Why Observability Is Different for Agentic Systems
+
+Unlike monolithic applications, serverless and generative AI systems are distributed, stateless, and composed of ephemeral compute. This requires new thinking:
+
+- **AI outputs are non-deterministic** — logging and inspecting LLM outputs is the only way to validate correctness over time
+- **Serverless execution is trace-based, not server-based** — Lambda, Step Functions, and EventBridge don't run on fixed hosts
+- **Costs are token-based** — Bedrock charges per token; Lambda and Step Functions charge per duration and execution
+- **Security requires audit trails** — prompt logs, agent tool usage, and API calls must be scoped to identity and role
+- **Failures impact trust** — hallucinations, delays, or incorrect tool calls degrade user confidence
+
+Without observability: blind spots in agent behavior, undetected cost anomalies, limited insight into LLM quality, and difficulty in root-cause analysis across async workflows.
+
+---
+
+### Key Metrics to Monitor
+
+| Category | Metric | Why It Matters |
+|---|---|---|
+| **Agent behavior** | Tool selection rate; invalid tool invocations | Reveals misalignment between intent and action |
+| **Cost trends** | Inference cost per user or session | Enables FinOps reporting and tiered model routing decisions |
+| **Invocation metrics** | Lambda invocations; error rate; cold starts | Validates pipeline stability and error resilience |
+| **Knowledge base retrieval** | Hit/miss ratio; grounding relevance score | Measures RAG pipeline performance |
+| **Latency** | Inference latency per model | Detects slowdowns in Bedrock or SageMaker; optimizes response time |
+| **Prompt & response quality** | Hallucination rate; fallback rate | Ensures grounding is working and prompts behave as expected |
+| **Security & access** | Agent and tool usage by IAM role | Ensures least-privilege and traceability |
+| **Token usage** | Total input/output tokens (Bedrock) | Controls cost; detects prompt bloat or model misuse |
+| **Workflow health** | Step Functions failures, retries, timeouts | Surfaces orchestration issues and retry loops |
+
+---
+
+### AWS Services for Agentic AI Observability
+
+| Service | Purpose | Best For |
+|---|---|---|
+| **CloudWatch Logs** | Captures logs from Lambda, Step Functions, Bedrock Agents, API Gateway | Debugging, audit trails, user session tracing |
+| **CloudWatch Metrics** | Custom + service KPIs (invocation count, duration, token count) | Dashboarding, alerts, trend analysis |
+| **AWS X-Ray** | Distributed traces across Lambda, API Gateway, Step Functions | Root-cause analysis, latency tracking, dependency mapping |
+| **CloudWatch Embedded Metric Format** | Structured logging for advanced metrics in log streams | Analytics without separate metrics API calls |
+| **Bedrock Agent Trace + Model Invocation Logging** | Native agent execution trace, tool calls, RAG insights | Monitor agent behavior and troubleshoot failures |
+| **EventBridge Pipes + Schema Registries** | Tracks and validates event formats in pipeline | Prevent malformed events; ensure contract consistency |
+| **AWS CloudTrail** | Logs all API calls with identity context | Compliance, security audits, agent/tool usage by role |
+| **Amazon OpenSearch** | Indexes inference responses, structured logs, audit records | Semantic search of responses; observability dashboards |
+| **CloudWatch Synthetics** | Simulates traffic to test endpoints/workflows proactively | Uptime and regression monitoring across versions |
+
+---
+
+### Monitoring an Agent-Based Support Workflow (Stage-by-Stage)
+
+1. **User query → API Gateway** — monitor response time and 5xx errors
+2. **Pre-processor Lambda** — monitor cold starts and parsing failures
+3. **Bedrock Agent** — monitor prompt, tool call traces, token cost, and latency
+4. **Tool Lambda** (e.g. `getOrderStatus`) — monitor execution time and invocation count per user
+5. **RAG / Knowledge Base query** — monitor relevance score and missing grounding
+6. **Post-processor Lambda** — monitor schema validation and fallback triggers
+7. **CloudWatch + OpenSearch logs** — monitor session logs, trace IDs, and model response quality
+8. **Alarms** — alert on high failure rates, cost-per-session spikes, degraded latency
+
+---
+
+### Observability Best Practices (AWS)
+
+1. **Instrument with structured logs** — enable correlation across components (user session, trace ID, model response)
+2. **Use consistent logging schema** — support downstream parsing, alerting, and analytics pipelines
+3. **Emit custom metrics per layer** — distinguish model-related errors from infrastructure issues
+4. **Tag logs with environment and context** — filter by user role, region, version, or team
+5. **Use anomaly detection alarms** — detect token surges, latency spikes, or output drift
+6. **Correlate LLM response logs with downstream impact** — link agent outputs to decisions, escalations, or failures
+7. **Automate weekly dashboards** — prompt cost, model usage, and fallback rates to drive accountability
+
+> **Core principle:** In AI-driven serverless systems, you don't monitor hosts — you monitor **behavior, cost, and correctness**.
