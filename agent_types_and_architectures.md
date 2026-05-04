@@ -407,3 +407,34 @@ Without observability: blind spots in agent behavior, undetected cost anomalies,
 7. **Automate weekly dashboards** — prompt cost, model usage, and fallback rates to drive accountability
 
 > **Core principle:** In AI-driven serverless systems, you don't monitor hosts — you monitor **behavior, cost, and correctness**.
+
+---
+
+## Agent Tool Accuracy Evaluation
+
+Beyond runtime monitoring, evaluating agent quality requires systematic end-to-end testing against ground truth scenarios. The core approach: run the agent end-to-end, extract its chosen actions (tool invocations + arguments), and compare against expected outcomes.
+
+### The Three Evaluation Metrics
+
+| Metric | Question It Answers | What Failure Looks Like |
+|---|---|---|
+| **Tool Recall** | Did the planner include all expected tool invocations? | Agent skips a required step (e.g., fails to check inventory before confirming an order) |
+| **Tool Precision** | Did it avoid calling tools that were unnecessary? | Agent calls redundant or irrelevant tools, increasing latency and token cost |
+| **Parameter Accuracy** | For each tool, did it supply the correct arguments (e.g., the specific order ID or refund amount)? | Agent calls the right tool with wrong inputs — produces incorrect output even when planning is correct |
+
+### Why All Three Matter Together
+
+- **High recall + low precision** → Agent is thorough but wasteful; adds cost and latency without improving outcomes
+- **High precision + low recall** → Agent is efficient but incomplete; misses required steps
+- **High recall + high precision + low parameter accuracy** → Agent selects the right tools in the right order but produces wrong results — the hardest failure mode to detect without ground truth comparison
+- **Parameter accuracy is the hardest to measure** — requires scenario-specific ground truth (e.g., exact order IDs, dollar amounts, customer identifiers) rather than just structural correctness
+
+### Implementation Pattern
+
+1. Define ground truth scenarios with expected tool call sequences and arguments
+2. Run agent end-to-end against each scenario
+3. Extract actual tool invocations and arguments from generated outputs
+4. Compute recall, precision, and parameter accuracy per scenario
+5. Track metrics over time to detect regressions as prompts or models change
+
+> **Key insight:** An agent can pass structural evaluation (right tools, right order) while still failing on parameter accuracy. Prompt changes, model upgrades, and context window modifications can all silently degrade parameter accuracy without affecting tool selection.
