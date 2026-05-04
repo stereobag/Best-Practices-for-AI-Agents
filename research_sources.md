@@ -1,5 +1,5 @@
 # Research Sources and References
-## Last Updated: 2026-04-28
+## Last Updated: 2026-05-04
 
 This file tracks all research sources used in the DevProd knowledge base. Updated daily.
 
@@ -120,6 +120,14 @@ This file tracks all research sources used in the DevProd knowledge base. Update
 | MCP 2026 Roadmap | MCP ecosystem | Transport scalability, agent communication, governance maturation; Gartner: 40% of enterprise apps will include task-specific agents by end of 2026 | http://blog.modelcontextprotocol.io/posts/2026-mcp-roadmap/ |
 | CData: 2026 Year for Enterprise-Ready MCP | MCP ecosystem | MCP is de facto integration layer for agentic AI; natively supported by Anthropic, OpenAI, Google, Microsoft | https://www.cdata.com/blog/2026-year-enterprise-ready-mcp-adoption |
 | LinkedIn fastest-growing skills 2026 | Skill trends | AI Engineering, Prompting, Model Tuning are fastest-growing skills in 2026 | https://www.interviewquery.com/p/linkedin-ai-engineering-fastest-growing-skills-2026 |
+
+## New Sources Added 2026-05-04
+
+| Source | Topic | Key Insight | Link |
+|--------|-------|-------------|------|
+| IBM Think: AI Agent Memory | Agent memory types and architectures | IBM's reference guide covering the types of memory available to AI agents (in-context, external, in-weights, in-cache), how agents use memory to maintain state across interactions, and frameworks for implementing persistent agent memory | https://www.ibm.com/think/topics/ai-agent-memory |
+
+---
 
 ## New Sources Added 2026-04-28
 
