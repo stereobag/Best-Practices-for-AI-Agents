@@ -307,8 +307,9 @@ Source: [Retool vibe coding risks](https://retool.com/blog/vibe-coding-risks); [
 6. **Test agent pipelines in staging** with real (or realistic) data before production
 7. **Monitor agent spend** — multi-agent systems can consume tokens rapidly; set budget alerts
 8. **Version your agent prompts** — treat system prompts like code; use git for prompt management
-9. **Curate, do not accumulate, toolsets** — Stripe discovered that carefully selected and maintained tools outperform larger unmanaged tool collections; ~500 curated tools at Stripe outperforms thousands of uncurated ones
-10. **Isolate blast radius** — Run agent tasks in dedicated cloud sandboxes with full internal permissions but strict external boundaries (Ramp: Modal containers; Stripe: AWS EC2 devboxes; Coinbase: custom sandbox)
+9. **Prefer Bash over pre-built tools where possible** — giving agents general-purpose code execution lets them solve novel problems autonomously; pre-built tools are constraints, not capabilities
+10. **Curate, do not accumulate, toolsets** — Stripe discovered that carefully selected and maintained tools outperform larger unmanaged tool collections; ~500 curated tools at Stripe outperforms thousands of uncurated ones
+11. **Isolate blast radius** — Run agent tasks in dedicated cloud sandboxes with full internal permissions but strict external boundaries (Ramp: Modal containers; Stripe: AWS EC2 devboxes; Coinbase: custom sandbox)
 
 ---
 
@@ -782,9 +783,71 @@ Beyond runtime monitoring, evaluating agent quality requires systematic end-to-e
 
 ## Agent Harness Frameworks — Detailed Evaluation
 
-*Source: "30 Agents Every AI Engineer Must Build" — Packt Publishing, Ch. 2*
+---
+
+### The Anatomy of an Agent Harness
+
+*Source: Harrison Chase, LangChain — https://www.langchain.com/blog/the-anatomy-of-an-agent-harness*
+
+**Agent = Model + Harness**
+
+> "The model contains the intelligence and the harness is the system that makes that intelligence useful."
+
+A harness is every piece of code, configuration, and execution logic that isn't the model itself. Raw models cannot maintain persistent state, execute code, access real-time knowledge, or set up environments. The harness bridges that gap.
+
+**Harness components:**
+- System prompts
+- Tools, skills, and MCPs with their descriptions
+- Bundled infrastructure (filesystem, sandbox, browser)
+- Orchestration logic (subagent spawning, handoffs, model routing)
+- Hooks and middleware for deterministic execution
 
 ---
+
+### Core Harness Primitives
+
+| Primitive | Purpose | Key Detail |
+|---|---|---|
+| **Filesystem** | Durable workspace for data, code, docs | Git integration enables version control and multi-agent collaboration |
+| **Bash / Code Execution** | General-purpose problem solving | Instead of constraining agents to pre-built tools, let the model write and execute code to solve novel problems |
+| **Sandboxes** | Safe isolated execution | Configurable resource limits and network restrictions; required before giving agents Bash access in production |
+| **Memory and Search** | Continual learning across sessions | Memory files (e.g. AGENTS.md, CLAUDE.md) persist knowledge; web search and MCP fill gaps beyond training cutoffs |
+| **Context Management** | Handle context window limits | Three strategies: compaction (summarize + offload), tool call offloading (store large outputs to filesystem, keep summaries in context), skills (progressive tool disclosure to prevent startup overload) |
+| **Planning and Self-Verification** | Ground solutions in outcomes | Agents decompose goals into steps, run tests, feed results back — creating a self-correcting loop |
+
+---
+
+### Long-Horizon Execution: Ralph Loops
+
+For work that spans multiple context windows, harnesses use **Ralph Loops**:
+
+```
+Agent approaches context limit
+        ↓
+Harness intercepts model exit
+        ↓
+Reinjects prompt with clean context window
+        ↓
+Agent continues from durable state (filesystem / git)
+        ↓
+Verification loop runs tests → feeds results back
+```
+
+This pattern enables autonomous execution of tasks that would otherwise exceed a single context window — critical for real-world engineering tasks.
+
+---
+
+### Model-Harness Co-Evolution
+
+Post-training happens with models and harnesses in the loop. Useful harness primitives influence subsequent model training — models learn to expect and use harness capabilities. Side effects:
+
+- **Overfitting risk:** Models can overfit to a specific harness design; swapping harnesses can significantly change benchmark performance
+- **Migration cost:** As models improve, some harness responsibilities migrate into model weights — harness code that was essential last year may become redundant
+- **Future-proofing:** Build harnesses around stable primitives (filesystem, bash, memory, sandboxes) rather than complex orchestration logic that models will eventually internalize
+
+---
+
+*Source: "30 Agents Every AI Engineer Must Build" — Packt Publishing, Ch. 2*
 
 ### Framework Comparison at a Glance
 
