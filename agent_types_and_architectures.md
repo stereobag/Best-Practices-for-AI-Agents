@@ -1427,3 +1427,70 @@ Prompt engineering is an iterative, evidence-based discipline — not a one-shot
 4. **Revise and version** — Apply the change, label with a version identifier (e.g., v1.2.0), run the regression suite; accept only if the target failure is resolved without introducing new ones
 
 > Treat your prompt history as source code, not a scratch pad. Store prompt versions alongside their evaluation results. Teams that apply software engineering discipline to prompt iteration consistently outperform those that rely on ad hoc editing.
+
+---
+
+## Observability as a Learning System
+
+*Source: Harrison Chase, LangChain — https://www.langchain.com/blog/agent-observability-needs-feedback-to-power-learning*
+
+---
+
+### The Core Reframe
+
+Most teams treat agent observability as infrastructure for debugging. The more powerful framing: **observability is the raw material for continuous improvement**.
+
+> "Traces are not just records of what happened, and feedback is not just a rating at the end. Together, they are the raw material for improving the system."
+
+And critically:
+
+> "A trace tells you what happened. It does not, by itself, tell you whether what happened was good."
+
+Traces without feedback are incomplete. You cannot systematically answer which trajectories represent success, where problems originate, or whether behavior is actually improving — without pairing traces with structured feedback signals.
+
+---
+
+### Three Levels Where Improvement Happens
+
+| Level | What It Addresses | How to Improve |
+|---|---|---|
+| **Model Level** | Consistent misclassifications or wrong tool selection | Weight updates via supervised fine-tuning or RL |
+| **Harness Level** | Scaffolding failures — ambiguous tool descriptions, missing constraints, suboptimal prompts | Prompt engineering, tool description rewrites, constraint additions |
+| **Context Level** | Reasonable decisions made from poor or incomplete information | Retrieval improvements, memory architecture, context compression |
+
+**The diagnostic implication:** Before you retrain a model, check if the failure is at the harness or context level. Most production failures are harness or context failures, not model capability gaps.
+
+---
+
+### Four Feedback Sources
+
+| Source | Signal Type | Reliability | Scale |
+|---|---|---|---|
+| **Direct** | User ratings, thumbs up/down, corrections | High | Low (requires user action) |
+| **Indirect** | Code acceptance rates, ticket reopenings, test passage | Very high (behavioral, not stated) | Medium |
+| **LLM-as-Judge** | Scalable evaluation of helpfulness and policy compliance | Medium | High |
+| **Deterministic Rules** | Regex patterns, known failure mode checks | High for what they cover | Very high |
+
+**Key insight from Claude Code:** Not all feedback requires model inference. Claude Code uses a frustration-detection regex — cheap rules often capture the most actionable signal at the lowest cost. Start with deterministic rules before reaching for LLM-as-Judge.
+
+---
+
+### What Observability Platforms Must Support
+
+Three non-negotiable capabilities:
+
+1. **Trace Storage** — Complete agent trajectories: model calls, tool invocations, outputs, metadata, errors
+2. **Feedback Association** — Direct linkage between feedback signals and the specific traces they evaluate. Feedback in a separate spreadsheet is not observability — it's a spreadsheet.
+3. **Feedback Generation** — Automated rules, LLM evaluators, sampling strategies, and the ability to backfill historical traces with new evaluation criteria
+
+If your platform has traces but no structured feedback association, you have logging — not observability.
+
+---
+
+### Practical Takeaways
+
+1. **Instrument for learning, not just debugging** — capture traces with the explicit goal of identifying training examples and failure patterns
+2. **Layer your feedback sources** — deterministic rules first, then indirect signals, then LLM-as-Judge, then direct user feedback
+3. **Attribute failures to the right level** — model, harness, or context — before deciding how to fix them
+4. **Close the loop** — surface feedback back to the teams and systems that can act on it (prompt engineers, ML teams, retrieval engineers)
+5. **Backfill historical traces** — when you develop new evaluators, run them against historical data to detect when regressions were introduced
