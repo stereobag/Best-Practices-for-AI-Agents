@@ -89,6 +89,111 @@ One agent generates, another critiques — loops until quality threshold is met.
 
 ---
 
+## Choosing the Right Multi-Agent Architecture
+
+*Source: Harrison Chase, LangChain — https://www.langchain.com/blog/choosing-the-right-multi-agent-architecture*
+
+> "Start with a single agent and good prompt engineering. Add tools before adding agents. Graduate to multi-agent patterns only when you hit clear limits."
+
+Four distinct patterns with different tradeoffs across control, latency, state, and parallelism:
+
+---
+
+### Pattern A: Subagents (Centralized Orchestration)
+
+A supervisor agent coordinates specialized subagents by calling them as tools. Subagents are stateless; the main agent holds all conversation context.
+
+```
+         [Supervisor Agent]
+        /        |         \
+[Calendar]   [Email]    [CRM]
+ Subagent    Subagent   Subagent
+```
+
+- **Control:** Centralized — supervisor manages all workflow logic
+- **Parallelism:** High — subagents can run in parallel
+- **Cost:** +1 model call per interaction (results route back through supervisor)
+- **Best for:** Multiple distinct domains needing centralized control (e.g. personal assistants coordinating calendar, email, CRM)
+
+---
+
+### Pattern B: Skills (Progressive Disclosure)
+
+A single agent dynamically loads specialized prompts, instructions, and resources on demand. Skills are prompt-driven specializations packaged as directories.
+
+```
+[Agent]
+  ↓ (loads on demand)
+[Coding Skill] | [Writing Skill] | [Analysis Skill]
+```
+
+- **Control:** Agent self-directs based on task context
+- **Parallelism:** Low — single agent, sequential skill loading
+- **Cost:** Most efficient for repeat requests (40% efficiency gain); context accumulates across turns (token bloat risk)
+- **Best for:** Single agents with many specializations; different teams owning different capabilities
+
+---
+
+### Pattern C: Handoffs (State-Driven Transitions)
+
+The active agent changes dynamically as conversation context evolves. Each agent can transfer control to others via tool calling; state survives across turns.
+
+```
+[Intake Agent] → [Specialist Agent] → [Resolution Agent]
+     ↑ state carries through each handoff ↑
+```
+
+- **Control:** Distributed — each agent decides when to hand off
+- **Parallelism:** Low — sequential by design
+- **Cost:** 40% efficiency gain on repeat requests; state management overhead
+- **Best for:** Customer support flows collecting information in stages; sequential workflows where capabilities unlock only after preconditions are met
+
+---
+
+### Pattern D: Router (Parallel Dispatch and Synthesis)
+
+A routing step classifies input, dispatches to specialized agents in parallel, and synthesizes results.
+
+```
+         [Router]
+        /    |    \
+[Domain A] [Domain B] [Domain C]  ← parallel
+        \    |    /
+       [Synthesizer]
+```
+
+- **Control:** Stateless — consistent performance per request, no carry-over
+- **Parallelism:** Highest — all domain agents run simultaneously
+- **Cost:** 5 model calls for multi-domain queries; repeated routing overhead if conversation history needed
+- **Best for:** Enterprise knowledge bases across distinct verticals; scenarios requiring parallel queries across multiple sources
+
+---
+
+### Decision Matrix
+
+| Requirement | Best Pattern |
+|---|---|
+| Multiple distinct domains + parallel execution | **Subagents** |
+| Single agent + many specializations | **Skills** |
+| Sequential workflow + state transitions | **Handoffs** |
+| Multiple sources + parallel synthesis | **Router** |
+| Unknown — just getting started | **Single agent first** |
+
+### Performance Comparison
+
+| Pattern | Model Calls (single request) | Repeat Request Efficiency | Parallelism |
+|---|---|---|---|
+| Subagents | 4 | Standard | High |
+| Skills | 3 | +40% | Low |
+| Handoffs | Variable | +40% | Low |
+| Router | 5 | Standard | Highest |
+
+### Evidence: Multi-Agent vs. Single Agent
+
+Anthropic's multi-agent research system outperformed single-agent Claude Opus 4 by **90.2%** on internal research evaluations — the strongest published evidence for when to graduate from single-agent to multi-agent architecture.
+
+---
+
 ## Catalog of Agents to Build
 
 ### Development Lifecycle Agents
