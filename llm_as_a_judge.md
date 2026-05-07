@@ -72,8 +72,37 @@ LLMs are trained on human-annotated data — they inherit human biases and add t
 | **Nepotism** | LLM favors its own generated content | GPT-4 rates its own response higher than Claude's for the same quality | Use a different model family as judge than the generator |
 | **Verbosity** | Equates length with quality | Lengthy, redundant explanation rated higher than concise, accurate one | Explicitly instruct judge to value conciseness; include length as a negative criterion |
 | **Authority** | Assigns credibility to authority signals | "According to Harvard researchers..." scores higher regardless of accuracy | Strip authority markers from evaluated text before judging |
-| **Positional** | Favors the first or last response in pairwise | Output A wins just because it appears first | Randomize order; run both orderings and average |
-| **Self-enhancement** | Rates flattering content about LLMs higher | Response praising AI gets better scores | Include adversarial examples in calibration |
+| **Positional** | 35% of judgments change based on answer order | Output A wins just because it appears first | Swap positions, run pairwise twice and average |
+| **Self-preference** | Models favor own outputs by 10–25% | GPT-4 rates GPT-4 outputs higher than equally-good Claude outputs | Use a different model family for judge vs generator |
+
+---
+
+## ChainPoll — Multi-Judge Voting
+
+Single LLM judge AUROC: 66–68%. Fix: run 5 judges in parallel on the same prompt.
+
+**Settings:** Temperature 0 · 5 parallel instances · Score = (# Fail) / 5
+
+**Example:** 3 judges return Fail, 2 return Pass → hallucination risk score = 0.60
+
+| Method | AUROC | vs ChainPoll |
+|---|---|---|
+| **ChainPoll (5 judges)** | **0.781** | — |
+| SelfCheck-Bert | 0.673 | -14% |
+| SelfCheck-NGram | 0.644 | -18% |
+| G-Eval | 0.579 | -26% |
+| GPTScore | 0.524 | -33% |
+
+Cost: $0.015/eval (5× gpt-3.5-turbo) vs $0.060 for GPT-4. 4× cheaper and more accurate.
+
+**F1 benchmarks for judge quality:**
+
+| Score | Rating |
+|---|---|
+| ≥ 0.95 | Outstanding |
+| ≥ 0.85 | Excellent |
+| 0.70–0.85 | Substantial |
+| < 0.50 | Poor |
 
 ---
 
