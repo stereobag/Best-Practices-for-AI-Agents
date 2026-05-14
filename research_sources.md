@@ -82,6 +82,7 @@ This file tracks all research sources used in the DevProd knowledge base. Update
 | n8n Blog: Orchestration Frameworks | LangGraph vs CrewAI vs others | https://blog.n8n.io/ai-agent-orchestration-frameworks/ |
 | Kanerika: Agent Orchestration 2026 | Coordination, scale, strategy | https://kanerika.com/blogs/ai-agent-orchestration/ |
 | Cursor IDE Blog: Claude Subagents | Multi-agent systems guide | https://www.cursor-ide.com/blog/claude-subagents |
+| Aman.ai: AI Agent Skills Primer | Comprehensive primer on agent skills, tool use, and agentic capabilities | https://aman.ai/primers/ai/agent-skills/ |
 
 ---
 
